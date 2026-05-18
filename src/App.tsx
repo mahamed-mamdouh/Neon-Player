@@ -117,6 +117,7 @@ export default function App() {
   const localAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.5);
@@ -124,7 +125,7 @@ export default function App() {
   const [seekTime, setSeekTime] = useState<number | null>(null);
   const wasPlayingRef = useRef(false);
   
-  const [playMode, setPlayMode] = useState<'normal' | 'shuffle' | 'repeat'>('normal');
+  const [playMode, setPlayMode] = useState<'normal' | 'shuffle' | 'repeat' | 'repeat-one'>('normal');
   const [volumeHovered, setVolumeHovered] = useState(false);
   const [volumeDragging, setVolumeDragging] = useState(false);
   const volumeBarRef = useRef<HTMLDivElement>(null);
@@ -173,31 +174,44 @@ export default function App() {
 
   const toggleMute = () => setMuted(m => !m);
 
-  const next = useCallback(() => {
-    const wasPlaying = isPlaying;
+  const next = useCallback((isManual = false) => {
+    const shouldAutoPlay = isPlaying;
+
+    if (playMode === 'repeat-one' && !isManual) {
+      setCurrentTime(0);
+      setSeekTime(0);
+      setIsPlaying(true);
+      if (currentMode === 'local' && localAudioRef.current) {
+        localAudioRef.current.currentTime = 0;
+        localAudioRef.current.play().catch(e => console.error("Error repeating local audio:", e));
+      }
+      return;
+    }
+
+    setPendingAutoPlay(shouldAutoPlay);
+    setIsPlaying(false);
 
     if (currentMode === 'local') {
       if (localAudioRef.current) {
         localAudioRef.current.currentTime = 0;
         setCurrentTime(0);
-        if (wasPlaying) {
-          localAudioRef.current.play().catch(e => console.error("Error playing local audio:", e));
+        if (shouldAutoPlay) {
+          localAudioRef.current.load();
         }
       }
       return;
     }
 
     if (playlist.length === 0) return;
-    setIsPlaying(false);
-    wasPlayingRef.current = wasPlaying;
+    wasPlayingRef.current = shouldAutoPlay;
 
     let nextIndex = currentTrackIndex + 1;
     if (playMode === 'shuffle') {
       nextIndex = Math.floor(Math.random() * playlist.length);
-    } else if (playMode === 'repeat' && nextIndex >= playlist.length) {
+    } else if ((playMode === 'repeat' || playMode === 'repeat-one') && nextIndex >= playlist.length) {
       nextIndex = 0;
     } else if (nextIndex >= playlist.length) {
-      setIsPlaying(false);
+      setPendingAutoPlay(false);
       return;
     }
     setCurrentTrackIndex(nextIndex);
@@ -206,22 +220,23 @@ export default function App() {
   }, [playlist.length, currentTrackIndex, playMode, currentMode, isPlaying]);
 
   const prev = () => {
-    const wasPlaying = isPlaying;
+    const shouldAutoPlay = isPlaying;
+    setPendingAutoPlay(shouldAutoPlay);
+    setIsPlaying(false);
 
     if (currentMode === 'local') {
       if (localAudioRef.current) {
         localAudioRef.current.currentTime = 0;
         setCurrentTime(0);
-        if (wasPlaying) {
-          localAudioRef.current.play().catch(e => console.error("Error playing local audio:", e));
+        if (shouldAutoPlay) {
+          localAudioRef.current.load();
         }
       }
       return;
     }
 
     if (playlist.length === 0) return;
-    setIsPlaying(false);
-    wasPlayingRef.current = wasPlaying;
+    wasPlayingRef.current = shouldAutoPlay;
 
     const prevIndex = currentTrackIndex - 1 < 0 ? playlist.length - 1 : currentTrackIndex - 1;
     setCurrentTrackIndex(prevIndex);
@@ -241,7 +256,12 @@ export default function App() {
   };
 
   const cyclePlayMode = useCallback(() => {
-    setPlayMode((m) => m === 'normal' ? 'shuffle' : m === 'shuffle' ? 'repeat' : 'normal');
+    setPlayMode((m) => {
+      if (m === 'normal') return 'shuffle';
+      if (m === 'shuffle') return 'repeat';
+      if (m === 'repeat') return 'repeat-one';
+      return 'normal';
+    });
   }, []);
 
   useEffect(() => {
@@ -346,8 +366,15 @@ export default function App() {
       setLocalTrack(t => ({ ...t, duration: durationStr }));
     };
     const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
+      if (playMode === 'repeat-one') {
+        audio.currentTime = 0;
+        setCurrentTime(0);
+        audio.play().catch(e => console.error("Error repeating local audio:", e));
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      }
     };
     const handlePlay = () => {
       setIsPlaying(true);
@@ -381,7 +408,32 @@ export default function App() {
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, [localAudioPath, currentMode]);
+  }, [localAudioPath, currentMode, playMode]);
+
+  // Autoplay local audio when track changes and pendingAutoPlay is true
+  useEffect(() => {
+    if (pendingAutoPlay && currentMode === 'local' && localAudioRef.current) {
+      const audio = localAudioRef.current;
+      audio.load();
+      
+      const onCanPlay = async () => {
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Failed to autoplay next local track:", error);
+          setIsPlaying(false);
+        } finally {
+          setPendingAutoPlay(false);
+        }
+      };
+
+      audio.addEventListener('canplay', onCanPlay, { once: true });
+      return () => {
+        audio.removeEventListener('canplay', onCanPlay);
+      };
+    }
+  }, [currentTrack.title, pendingAutoPlay, currentMode]);
 
   const handleSelectLocalAudio = async () => {
     try {
@@ -514,9 +566,11 @@ export default function App() {
             videoId={currentTrack.videoId}
             isPlaying={isPlaying && currentMode === 'youtube'}
             wasPlaying={wasPlayingRef.current && currentMode === 'youtube'}
+            autoPlayOnReady={pendingAutoPlay}
             onPlay={() => {
               setIsPlaying(true);
               wasPlayingRef.current = false;
+              setPendingAutoPlay(false);
             }}
             onPause={() => setIsPlaying(false)}
             seekTime={seekTime}
@@ -524,7 +578,8 @@ export default function App() {
             muted={muted}
             onReady={(d) => setDuration(d)}
             onProgress={(t) => setCurrentTime(t)}
-            onEnd={next}
+            onEnd={() => next(false)}
+            onSeekComplete={() => setSeekTime(null)}
           />
         ) : null}
 
@@ -598,7 +653,7 @@ export default function App() {
       />
 
       <img
-        src={playMode === 'repeat' ? assets.repeatButton : assets.shuffleButton}
+        src={(playMode === 'repeat' || playMode === 'repeat-one') ? assets.repeatButton : assets.shuffleButton}
         className="layer layer-ui"
         alt=""
         draggable={false}
@@ -667,7 +722,7 @@ export default function App() {
 
       <div className="btn btn-prev" onClick={prev} />
       <div className="btn btn-play" onClick={togglePlay} />
-      <div className="btn btn-next" onClick={next} />
+      <div className="btn btn-next" onClick={() => next(true)} />
 
       {(volumeHovered || volumeDragging) && (
         <>
@@ -708,7 +763,11 @@ export default function App() {
         )}
       </div>
 
-      <div className="btn btn-playmode" onClick={cyclePlayMode} title={playMode} />
+      <div className="btn btn-playmode" onClick={cyclePlayMode} title={playMode}>
+        {playMode === 'repeat-one' && (
+          <span className="repeat-one-badge">1</span>
+        )}
+      </div>
 
       <div className="btn btn-minimize" onClick={minimizeWindow} />
       <div className="btn btn-window" style={{ display: 'none' }} />
@@ -734,10 +793,14 @@ export default function App() {
                   key={idx}
                   className={`playlist-panel-item ${idx === currentTrackIndex && currentMode === 'youtube' ? 'active' : ''}`}
                   onClick={() => {
+                    const shouldAutoPlay = isPlaying;
                     handleModeChange('youtube');
                     setIsPlaying(false);
-                    wasPlayingRef.current = true;
+                    setPendingAutoPlay(shouldAutoPlay);
+                    wasPlayingRef.current = shouldAutoPlay;
                     setCurrentTrackIndex(idx);
+                    setCurrentTime(0);
+                    setSeekTime(0);
                   }}
                 >
                   {item.thumbnailUrl && (

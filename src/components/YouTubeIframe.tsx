@@ -5,6 +5,7 @@ interface YouTubeIframeProps {
   videoId: string;
   isPlaying: boolean;
   wasPlaying: boolean;
+  autoPlayOnReady?: boolean;
   onReady: (duration: number) => void;
   onProgress: (currentTime: number) => void;
   onEnd: () => void;
@@ -13,12 +14,14 @@ interface YouTubeIframeProps {
   seekTime: number | null;
   volume: number; // 0.0 to 1.0
   muted: boolean;
+  onSeekComplete?: () => void;
 }
 
 export function YouTubeIframe({
   videoId,
   isPlaying,
   wasPlaying,
+  autoPlayOnReady,
   onReady,
   onProgress,
   onEnd,
@@ -27,6 +30,7 @@ export function YouTubeIframe({
   seekTime,
   volume,
   muted,
+  onSeekComplete,
 }: YouTubeIframeProps) {
   const playerRef = useRef<YTPlayer | null>(null);
   const prevIsPlayingRef = useRef(isPlaying);
@@ -68,6 +72,7 @@ export function YouTubeIframe({
           }
         }
       }, 50);
+      prevIsPlayingRef.current = isPlaying;
       return () => clearTimeout(t);
     } else if (!isPlaying && prevIsPlayingRef.current) {
       try {
@@ -79,12 +84,13 @@ export function YouTubeIframe({
     prevIsPlayingRef.current = isPlaying;
   }, [isPlaying, videoId, playerReady]);
 
-  // Autoplay/cue on track change if wasPlaying is true
+  // Autoplay/cue on track change if wasPlaying or autoPlayOnReady is true
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
-    if (videoId && wasPlaying) {
+    const shouldPlay = wasPlaying || autoPlayOnReady;
+    if (videoId && shouldPlay) {
       const t = setTimeout(() => {
-        if (playerReady && playerRef.current && wasPlaying) {
+        if (playerReady && playerRef.current && (wasPlaying || autoPlayOnReady)) {
           try {
             playerRef.current.playVideo();
           } catch (e) {
@@ -94,18 +100,24 @@ export function YouTubeIframe({
       }, 50);
       return () => clearTimeout(t);
     }
-  }, [videoId, wasPlaying, playerReady]);
+  }, [videoId, wasPlaying, autoPlayOnReady, playerReady]);
 
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
     if (seekTime !== null && videoId) {
       try {
         playerRef.current.seekTo(seekTime, true);
+        if (isPlaying) {
+          playerRef.current.playVideo();
+        }
+        if (onSeekComplete) {
+          onSeekComplete();
+        }
       } catch (e) {
         console.warn("Failed to seek video:", e);
       }
     }
-  }, [seekTime, playerReady, videoId]);
+  }, [seekTime, playerReady, videoId, isPlaying, onSeekComplete]);
 
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
@@ -145,7 +157,8 @@ export function YouTubeIframe({
       console.warn("Error in onReady callback:", e);
     }
 
-    if (isPlaying && videoId) {
+    const shouldPlay = isPlaying || autoPlayOnReady;
+    if (shouldPlay && videoId) {
       try {
         event.target.playVideo();
       } catch (e) {
@@ -175,6 +188,7 @@ export function YouTubeIframe({
   return (
     <div className="hidden absolute opacity-0 pointer-events-none" style={{ display: 'none' }}>
       <YouTube
+        key={activeVideoId}
         videoId={activeVideoId}
         opts={{ height: "0", width: "0", playerVars: { autoplay: 0, controls: 0 } }}
         onReady={handlePlayerReady}
@@ -185,4 +199,5 @@ export function YouTubeIframe({
     </div>
   );
 }
+
 

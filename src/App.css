@@ -762,3 +762,26 @@
   transform: translateX(calc(24 / 306 * 100vw));
 }
 
+/* Repeat One Song Badge styling */
+.repeat-one-badge {
+  position: absolute;
+  right: calc(-2 / 306 * 100vw);
+  bottom: calc(-2 / 306 * 100vw);
+  background: var(--color-title);
+  color: var(--color-panel-text);
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(8 / 306 * 100vw);
+  line-height: calc(8 / 306 * 100vw);
+  width: calc(8 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  border-radius: calc(1.5 / 306 * 100vw);
+  border: calc(1 / 306 * 100vw) solid var(--color-panel-text);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+

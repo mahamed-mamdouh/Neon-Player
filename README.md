@@ -1,10 +1,16 @@
-# 🎶 Neon Player
+<p align="center">
+  <img src="assets/logo.png" alt="Neon Player Logo" width="140" />
+</p>
 
-<div align="center">
-  <img src="public/logo.png" width="128" alt="Neon Player Logo" />
-  <p><strong>A Cute, Retro, Pixel-Art Desktop Music Player inspired by Cupid Music Player</strong></p>
-  <p>Built with 💖 using <strong>Tauri v2</strong> + <strong>React</strong> + <strong>TypeScript</strong> + <strong>Vite</strong></p>
-</div>
+<h1 align="center">Neon Player</h1>
+
+<p align="center">
+  A retro-themed desktop music player built with Tauri, React, and TypeScript.
+</p>
+
+<p align="center">
+  Built with 💖 using <strong>Tauri v2</strong> • <strong>React</strong> • <strong>TypeScript</strong> • <strong>Vite</strong>
+</p>
 
 ---
 

@@ -4,6 +4,7 @@ export interface YouTubePlaylistItem {
   title: string;
   channelTitle: string;
   thumbnailUrl: string;
+  duration?: string;
 }
 
 // Ensure you set VITE_YOUTUBE_API_KEY in your .env file

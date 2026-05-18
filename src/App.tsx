@@ -3,7 +3,7 @@ import './App.css';
 import useTheme from './hooks/useTheme';
 import { YouTubeIframe } from './components/YouTubeIframe';
 import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem } from './utils/youtubeApi';
-import { resizeWindow, minimizeWindow, closeWindow, toggleMaximizeWindow } from './utils/windowApi';
+import { resizeWindow, minimizeWindow, closeWindow } from './utils/windowApi';
 
 import progressBarStars from './assets/progress_bar_stars.png';
 import star from './assets/star.png';
@@ -69,7 +69,32 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showPlaylistSongs, setShowPlaylistSongs] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [playlist, setPlaylist] = useState<YouTubePlaylistItem[]>([]);
+  const [playlist, setPlaylist] = useState<YouTubePlaylistItem[]>([
+    {
+      id: "sample-1",
+      videoId: "dQw4w9WgXcQ",
+      title: "Moonlight Pixel Serenade",
+      channelTitle: "Lofi Dreamer",
+      thumbnailUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=80&h=80&q=80",
+      duration: "3:45"
+    },
+    {
+      id: "sample-2",
+      videoId: "dQw4w9WgXcQ",
+      title: "Chiptune Coffee Shop Vibes",
+      channelTitle: "8-Bit Arcade",
+      thumbnailUrl: "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?auto=format&fit=crop&w=80&h=80&q=80",
+      duration: "2:30"
+    },
+    {
+      id: "sample-3",
+      videoId: "dQw4w9WgXcQ",
+      title: "Neon City Raindrops",
+      channelTitle: "Synthwave Rider",
+      thumbnailUrl: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=80&h=80&q=80",
+      duration: "4:12"
+    }
+  ]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -275,7 +300,7 @@ export default function App() {
 
       <img src={assets.frame} className="layer" alt="" draggable={false} />
 
-      <div className="window-title">neon player</div>
+      <div className="window-title" data-tauri-drag-region>neon player</div>
 
       <img src={assets.recordPlayer} className="record-player" alt="" draggable={false} />
       <img
@@ -342,8 +367,8 @@ export default function App() {
         style={{ opacity: playMode === 'normal' ? 0.4 : 0.8 }}
       />
 
-      <img src={assets.minimizerButton} className="layer layer-ui" alt="" draggable={false} />
-      <img src={assets.windowButton} className="layer layer-ui" alt="" draggable={false} />
+      <img src={assets.minimizerButton} className="layer layer-ui minimizer-layer" alt="" draggable={false} />
+      <img src={assets.windowButton} className="layer layer-ui" alt="" draggable={false} style={{ display: 'none' }} />
       <img src={assets.exitButton} className="layer layer-ui" alt="" draggable={false} />
 
       <img src={assets.settings} className="layer layer-ui settings-layer" alt="" draggable={false} />
@@ -448,7 +473,7 @@ export default function App() {
       <div className="btn btn-playmode" onClick={cyclePlayMode} title={playMode} />
 
       <div className="btn btn-minimize" onClick={minimizeWindow} />
-      <div className="btn btn-window" onClick={toggleMaximizeWindow} />
+      <div className="btn btn-window" style={{ display: 'none' }} />
       <div className="btn btn-exit" onClick={closeWindow} />
 
       <button className="btn-playlist-toggle" onClick={() => { setShowPlaylistSongs(v => !v); setShowSettings(false); }}>
@@ -478,17 +503,16 @@ export default function App() {
                   {item.thumbnailUrl && (
                     <img 
                       src={item.thumbnailUrl} 
-                      style={{ 
-                        width: '20px', 
-                        height: '15px', 
-                        objectFit: 'cover', 
-                        imageRendering: 'pixelated', 
-                        borderRadius: '1px' 
-                      }} 
+                      className="playlist-item-thumb"
+                      alt="" 
                     />
                   )}
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                    {item.title}
+                  <div className="playlist-item-details">
+                    <span className="playlist-item-title">{item.title}</span>
+                    <span className="playlist-item-artist">{item.channelTitle}</span>
+                  </div>
+                  <span className="playlist-item-duration">
+                    {item.duration || "3:15"}
                   </span>
                 </button>
               ))

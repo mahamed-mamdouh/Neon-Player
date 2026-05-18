@@ -1,4 +1,5 @@
-import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { LogicalSize } from '@tauri-apps/api/dpi';
 
 const WIDTH = 415;
 const HEIGHT = 674;

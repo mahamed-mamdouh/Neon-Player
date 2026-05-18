@@ -3,8 +3,10 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  border-radius: calc(5 / 306 * 100vw); /* match frame's pixel-art rounded corners */
-  clip-path: inset(0 0 0 calc(3 / 306 * 100vw));
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background: #f6cfc8; /* Frame color for pink theme */
   --color-title: #78364F;
   --color-primary: #5a3a4a;
   --color-secondary: #8a6a7a;
@@ -12,6 +14,7 @@
 }
 
 .player.theme-blue {
+  background: #c8d3f6; /* Frame color for blue theme */
   --color-title: #063940;
   --color-primary: #063940;
   --color-secondary: #1a6b6b;
@@ -90,13 +93,12 @@
 }
 
 .btn-minimize {
-
-  left: calc((331 - 110) / 306 * 100vw);
+  left: calc((355 - 110) / 306 * 100vw);
   top: calc((48 - 23) / 306 * 100vw);
 }
 
 .btn-window {
-
+  display: none;
   left: calc((355 - 110) / 306 * 100vw);
   top: calc((48 - 23) / 306 * 100vw);
   width: calc(19 / 306 * 100vw);
@@ -121,23 +123,24 @@
 /* Playlist Toggle Button */
 .btn-playlist-toggle {
   position: absolute;
-  left: calc((252 - 110) / 306 * 100vw);
+  left: 50%;
+  transform: translateX(-50%);
   top: calc((48 - 23) / 306 * 100vw);
   font-family: 'Rainyhearts', monospace;
-  font-size: calc(10 / 306 * 100vw);
+  font-size: calc(13 / 306 * 100vw);
   color: var(--color-title);
   background: transparent;
-  border: calc(1 / 306 * 100vw) solid var(--color-title);
-  border-radius: calc(3 / 306 * 100vw);
+  border: calc(1.5 / 306 * 100vw) solid var(--color-title);
+  border-radius: calc(4 / 306 * 100vw);
   cursor: pointer;
   z-index: 150;
   -webkit-app-region: no-drag;
   user-select: none;
-  padding: calc(1 / 306 * 100vw) calc(5 / 306 * 100vw);
+  padding: calc(2 / 306 * 100vw) calc(8 / 306 * 100vw);
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(18 / 306 * 100vw);
+  height: calc(22 / 306 * 100vw);
 }
 .btn-playlist-toggle:hover {
   background: var(--color-title);
@@ -149,7 +152,8 @@
 .playlist-panel {
   position: absolute;
   top: calc((70 - 23) / 306 * 100vw);
-  left: calc(5 / 306 * 100vw);
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 300;
   -webkit-app-region: no-drag;
   pointer-events: auto;
@@ -160,7 +164,7 @@
   border: calc(2 / 306 * 100vw) solid var(--color-secondary);
   border-radius: calc(4 / 306 * 100vw);
   padding: calc(8 / 306 * 100vw);
-  width: calc(180 / 306 * 100vw);
+  width: calc(200 / 306 * 100vw);
   max-height: calc(250 / 306 * 100vw);
   overflow-y: auto;
   display: flex;
@@ -180,22 +184,83 @@
 }
 
 .playlist-panel-item {
-  font-family: 'Rainyhearts', monospace;
-  font-size: calc(12 / 306 * 100vw);
   background: rgba(255, 255, 255, 0.05);
   border: none;
-  border-radius: calc(2 / 306 * 100vw);
+  border-radius: calc(3 / 306 * 100vw);
   color: var(--color-panel-text);
-  padding: calc(6 / 306 * 100vw) calc(8 / 306 * 100vw);
+  padding: calc(5 / 306 * 100vw) calc(6 / 306 * 100vw);
   cursor: pointer;
   text-align: left;
   display: flex;
   align-items: center;
   gap: calc(6 / 306 * 100vw);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.playlist-item-thumb {
+  width: calc(24 / 306 * 100vw);
+  height: calc(18 / 306 * 100vw);
+  object-fit: cover;
+  image-rendering: pixelated;
+  border-radius: calc(2 / 306 * 100vw);
+  flex-shrink: 0;
+}
+
+.playlist-item-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+.playlist-item-title {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(11 / 306 * 100vw);
+  font-weight: 500;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+}
+
+.playlist-panel-item.active .playlist-item-title {
+  font-weight: bold;
+}
+
+.playlist-item-artist {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(8 / 306 * 100vw);
+  opacity: 0.6;
+  line-height: 1.1;
+  margin-top: calc(1 / 306 * 100vw);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.playlist-panel-item.active .playlist-item-artist {
+  opacity: 0.85;
+}
+
+.playlist-item-duration {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(9 / 306 * 100vw);
+  color: var(--color-panel-text);
+  opacity: 0.7;
+  flex-shrink: 0;
+  margin-left: calc(6 / 306 * 100vw);
+}
+
+.playlist-panel-item.active .playlist-item-duration {
+  opacity: 1;
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .playlist-panel-item:hover {
@@ -692,3 +757,8 @@
   color: #c44;
   word-break: break-word;
 }
+
+.minimizer-layer {
+  transform: translateX(calc(24 / 306 * 100vw));
+}
+

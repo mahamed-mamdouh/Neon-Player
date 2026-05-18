@@ -16,7 +16,7 @@
         "width": 415,
         "height": 674,
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "resizable": false
       }
     ],

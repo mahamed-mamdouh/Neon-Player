@@ -4,6 +4,9 @@ import useTheme from './hooks/useTheme';
 import { YouTubeIframe } from './components/YouTubeIframe';
 import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem } from './utils/youtubeApi';
 import { resizeWindow, minimizeWindow, closeWindow } from './utils/windowApi';
+import { open } from "@tauri-apps/plugin-dialog";
+import { convertFileSrc } from "@tauri-apps/api/core";
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 import progressBarStars from './assets/progress_bar_stars.png';
 import star from './assets/star.png';
@@ -98,12 +101,28 @@ export default function App() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // Playback state & division
+  const [currentMode, setCurrentMode] = useState<'local' | 'youtube'>('youtube');
+  const [localAudioPath, setLocalAudioPath] = useState<string>('');
+  const [localTrack, setLocalTrack] = useState<YouTubePlaylistItem>({
+    id: "local-track",
+    videoId: "",
+    title: "No Local Audio",
+    channelTitle: "Local File",
+    thumbnailUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=80&h=80&q=80",
+    duration: "0:00"
+  });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const localAudioRef = useRef<HTMLAudioElement | null>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0.5);
   const [muted, setMuted] = useState(false);
   const [seekTime, setSeekTime] = useState<number | null>(null);
+  const wasPlayingRef = useRef(false);
   
   const [playMode, setPlayMode] = useState<'normal' | 'shuffle' | 'repeat'>('normal');
   const [volumeHovered, setVolumeHovered] = useState(false);
@@ -125,12 +144,53 @@ export default function App() {
   const prevTrackRef = useRef<string | null>(null);
   const [needleChangeFrame, setNeedleChangeFrame] = useState(0);
 
-  const currentTrack = playlist[currentTrackIndex] || { title: 'No track', channelTitle: '', thumbnailUrl: '' };
+  const defaultThumbnail = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=80&h=80&q=80";
+
+  const rawTrack = currentMode === 'local'
+    ? localTrack
+    : playlist[currentTrackIndex];
+
+  const currentTrack = {
+    id: rawTrack?.id || "fallback-track-id",
+    videoId: rawTrack?.videoId || "",
+    title: rawTrack?.title || "Unknown title",
+    channelTitle: rawTrack?.channelTitle || "Unknown artist",
+    thumbnailUrl: rawTrack?.thumbnailUrl || defaultThumbnail,
+    duration: rawTrack?.duration || "0:00"
+  };
   
-  const togglePlay = () => setIsPlaying(p => !p);
+  const togglePlay = () => {
+    if (currentMode === 'local' && localAudioRef.current) {
+      if (isPlaying) {
+        localAudioRef.current.pause();
+      } else {
+        localAudioRef.current.play().catch(e => console.error("Error playing local audio:", e));
+      }
+    } else {
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   const toggleMute = () => setMuted(m => !m);
+
   const next = useCallback(() => {
+    const wasPlaying = isPlaying;
+
+    if (currentMode === 'local') {
+      if (localAudioRef.current) {
+        localAudioRef.current.currentTime = 0;
+        setCurrentTime(0);
+        if (wasPlaying) {
+          localAudioRef.current.play().catch(e => console.error("Error playing local audio:", e));
+        }
+      }
+      return;
+    }
+
     if (playlist.length === 0) return;
+    setIsPlaying(false);
+    wasPlayingRef.current = wasPlaying;
+
     let nextIndex = currentTrackIndex + 1;
     if (playMode === 'shuffle') {
       nextIndex = Math.floor(Math.random() * playlist.length);
@@ -143,21 +203,40 @@ export default function App() {
     setCurrentTrackIndex(nextIndex);
     setCurrentTime(0);
     setSeekTime(0);
-    setIsPlaying(true);
-  }, [playlist.length, currentTrackIndex, playMode]);
+  }, [playlist.length, currentTrackIndex, playMode, currentMode, isPlaying]);
 
   const prev = () => {
+    const wasPlaying = isPlaying;
+
+    if (currentMode === 'local') {
+      if (localAudioRef.current) {
+        localAudioRef.current.currentTime = 0;
+        setCurrentTime(0);
+        if (wasPlaying) {
+          localAudioRef.current.play().catch(e => console.error("Error playing local audio:", e));
+        }
+      }
+      return;
+    }
+
     if (playlist.length === 0) return;
+    setIsPlaying(false);
+    wasPlayingRef.current = wasPlaying;
+
     const prevIndex = currentTrackIndex - 1 < 0 ? playlist.length - 1 : currentTrackIndex - 1;
     setCurrentTrackIndex(prevIndex);
     setCurrentTime(0);
     setSeekTime(0);
-    setIsPlaying(true);
   };
 
   const seek = (pct: number) => {
     if (duration > 0) {
-      setSeekTime(pct * duration);
+      const targetTime = pct * duration;
+      setSeekTime(targetTime);
+      setCurrentTime(targetTime);
+      if (currentMode === 'local' && localAudioRef.current) {
+        localAudioRef.current.currentTime = targetTime;
+      }
     }
   };
 
@@ -245,37 +324,179 @@ export default function App() {
 
   }, [currentTrack.title, needleLifted]);
 
+  // Synchronize volume and mute to the local audio element
+  useEffect(() => {
+    const audio = localAudioRef.current;
+    if (audio) {
+      audio.volume = muted ? 0 : volume;
+    }
+  }, [volume, muted, localAudioPath]);
+
+  // Handle local audio player event listeners
+  useEffect(() => {
+    const audio = localAudioRef.current;
+    if (!audio || currentMode !== 'local') return;
+
+    const updateTime = () => {
+      setCurrentTime(audio.currentTime);
+    };
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      const durationStr = formatTime(audio.duration);
+      setLocalTrack(t => ({ ...t, duration: durationStr }));
+    };
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+    const handleCanPlay = async () => {
+      if (wasPlayingRef.current) {
+        wasPlayingRef.current = false;
+        try {
+          await audio.play();
+        } catch (e) {
+          console.error("Failed to autoplay local audio after load:", e);
+        }
+      }
+    };
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('canplay', handleCanPlay);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [localAudioPath, currentMode]);
+
+  const handleSelectLocalAudio = async () => {
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [{ name: "Audio", extensions: ["mp3", "wav", "ogg", "m4a"] }],
+      });
+      if (selected && typeof selected === "string") {
+        setLocalAudioPath(selected);
+        const filename = selected.split('\\').pop()?.split('/').pop() || "Local File";
+        
+        setIsPlaying(false);
+        setCurrentTime(0);
+        setDuration(0);
+
+        setLocalTrack({
+          id: "local-track",
+          videoId: "",
+          title: filename,
+          channelTitle: "Local Audio",
+          thumbnailUrl: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=80&h=80&q=80",
+          duration: "0:00"
+        });
+        setErrorMessage(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Failed to select local file.");
+    }
+  };
+
+  const handleModeChange = (mode: 'local' | 'youtube') => {
+    if (mode === currentMode) return;
+
+    if (currentMode === 'local') {
+      if (localAudioRef.current) {
+        localAudioRef.current.pause();
+      }
+    }
+
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+    setCurrentMode(mode);
+    setErrorMessage(null);
+  };
+
   const loadYoutubeUrl = async () => {
     if (!youtubeUrl) return;
     setLoading(true);
-    const listRegex = /[?&]list=([^#\&\?]+)/;
-    const listMatch = youtubeUrl.match(listRegex);
+    setErrorMessage(null);
+
+    const isPlaylist = youtubeUrl.includes("list=") || youtubeUrl.includes("playlist");
     
-    if (listMatch && listMatch[1]) {
-      const playlistId = listMatch[1];
-      const items = await fetchPlaylistItems(playlistId);
-      setPlaylist(items);
-      setCurrentTrackIndex(0);
-      setIsPlaying(true);
-    } else {
-      let id = youtubeUrl;
-      const regex = /(?:v=|\/v\/|embed\/|youtu\.be\/|\/shorts\/)([^"&?\/\s]{11})/i;
-      const match = youtubeUrl.match(regex);
-      if (match && match[1]) id = match[1];
-      
-      const trackDetails = await fetchVideoDetails(id);
-      if (trackDetails) {
-        setPlaylist([trackDetails]);
+    try {
+      if (isPlaylist) {
+        let playlistId: string | null = null;
+        try {
+          const parsedUrl = new URL(youtubeUrl);
+          playlistId = parsedUrl.searchParams.get("list");
+        } catch (e) {
+          const match = youtubeUrl.match(/[?&]list=([^#\&\?]+)/);
+          if (match) {
+            playlistId = match[1];
+          }
+        }
+
+        const isValidPlaylistId = playlistId && /^[a-zA-Z0-9_-]+$/.test(playlistId);
+        if (!playlistId || !isValidPlaylistId) {
+          setErrorMessage("Could not load this playlist. Please check the link or API key.");
+          setLoading(false);
+          return;
+        }
+
+        const items = await fetchPlaylistItems(playlistId);
+        if (!items || items.length === 0) {
+          setErrorMessage("Could not load this playlist. Please check the link or API key.");
+          setLoading(false);
+          return;
+        }
+        setPlaylist(items);
+        setCurrentTrackIndex(0);
+        setIsPlaying(false); // Disables autoplay on launch/load!
       } else {
-        setPlaylist([{
-          id, videoId: id, title: "YouTube Stream", channelTitle: "Unknown Artist", thumbnailUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
-        }]);
+        let id = youtubeUrl.trim();
+        const regex = /(?:v=|\/v\/|embed\/|youtu\.be\/|\/shorts\/)([^"&?\/\s]{11})/i;
+        const match = youtubeUrl.match(regex);
+        if (match && match[1]) {
+          id = match[1];
+        } else {
+          if (id.length !== 11) {
+            setErrorMessage("Invalid YouTube Link or Video ID.");
+            setLoading(false);
+            return;
+          }
+        }
+        
+        const trackDetails = await fetchVideoDetails(id);
+        if (trackDetails) {
+          setPlaylist([trackDetails]);
+        } else {
+          setPlaylist([{
+            id, videoId: id, title: "YouTube Stream", channelTitle: "Unknown Artist", thumbnailUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
+          }]);
+        }
+        setCurrentTrackIndex(0);
+        setIsPlaying(false); // Disables autoplay on launch/load!
       }
-      setCurrentTrackIndex(0);
-      setIsPlaying(true);
+      setShowSettings(false);
+    } catch (err: any) {
+      console.error("Failed loading YouTube content:", err);
+      setErrorMessage("Could not load this playlist. Please check the link or API key.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    setShowSettings(false);
   };
 
   const resizeTL = useResize('top-left');
@@ -286,17 +507,34 @@ export default function App() {
   const progress = duration > 0 ? currentTime / duration : 0;
 
   return (
-    <div className={`player ${theme === 'blue' ? 'theme-blue' : ''}`}>
-      <YouTubeIframe 
-        videoId={currentTrack.videoId}
-        isPlaying={isPlaying}
-        seekTime={seekTime}
-        volume={volume}
-        muted={muted}
-        onReady={(d) => setDuration(d)}
-        onProgress={(t) => setCurrentTime(t)}
-        onEnd={next}
-      />
+    <ErrorBoundary theme={theme} assets={assets}>
+      <div className={`player ${theme === 'blue' ? 'theme-blue' : ''}`}>
+        {currentMode === 'youtube' && currentTrack.videoId ? (
+          <YouTubeIframe 
+            videoId={currentTrack.videoId}
+            isPlaying={isPlaying && currentMode === 'youtube'}
+            wasPlaying={wasPlayingRef.current && currentMode === 'youtube'}
+            onPlay={() => {
+              setIsPlaying(true);
+              wasPlayingRef.current = false;
+            }}
+            onPause={() => setIsPlaying(false)}
+            seekTime={seekTime}
+            volume={volume}
+            muted={muted}
+            onReady={(d) => setDuration(d)}
+            onProgress={(t) => setCurrentTime(t)}
+            onEnd={next}
+          />
+        ) : null}
+
+        {localAudioPath && (
+          <audio
+            ref={localAudioRef}
+            src={convertFileSrc(localAudioPath)}
+            style={{ display: 'none' }}
+          />
+        )}
 
       <img src={assets.frame} className="layer" alt="" draggable={false} />
 
@@ -494,10 +732,12 @@ export default function App() {
               playlist.map((item, idx) => (
                 <button
                   key={idx}
-                  className={`playlist-panel-item ${idx === currentTrackIndex ? 'active' : ''}`}
+                  className={`playlist-panel-item ${idx === currentTrackIndex && currentMode === 'youtube' ? 'active' : ''}`}
                   onClick={() => {
+                    handleModeChange('youtube');
+                    setIsPlaying(false);
+                    wasPlayingRef.current = true;
                     setCurrentTrackIndex(idx);
-                    setIsPlaying(true);
                   }}
                 >
                   {item.thumbnailUrl && (
@@ -539,35 +779,92 @@ export default function App() {
                 blue
               </button>
             </div>
-            
-            <div className="settings-label" style={{ marginTop: '20px' }}>youtube link</div>
-            <input 
-              type="text" 
-              placeholder="Paste Video or Playlist URL" 
-              value={youtubeUrl}
-              onChange={(e) => setYoutubeUrl(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                background: 'rgba(0,0,0,0.2)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                color: 'white',
-                borderRadius: '4px',
-                fontFamily: 'inherit',
-                marginBottom: '10px'
-              }}
-            />
-            <button 
-              className="settings-theme-btn" 
-              onClick={loadYoutubeUrl}
-              disabled={loading}
-              style={{ width: '100%', opacity: loading ? 0.5 : 1 }}
-            >
-              {loading ? 'loading...' : 'play'}
-            </button>
+
+            <div className="settings-label" style={{ marginTop: '15px' }}>mode</div>
+            <div className="settings-theme-row">
+              <button
+                className={`settings-theme-btn ${currentMode === 'local' ? 'active' : ''}`}
+                onClick={() => handleModeChange('local')}
+              >
+                local
+              </button>
+              <button
+                className={`settings-theme-btn ${currentMode === 'youtube' ? 'active' : ''}`}
+                onClick={() => handleModeChange('youtube')}
+              >
+                youtube
+              </button>
+            </div>
+
+            {currentMode === 'youtube' ? (
+              <>
+                <div className="settings-label" style={{ marginTop: '15px' }}>youtube link</div>
+                <input 
+                  type="text" 
+                  placeholder="Paste Video or Playlist URL" 
+                  value={youtubeUrl}
+                  onChange={(e) => setYoutubeUrl(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    background: 'rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontFamily: 'inherit',
+                    marginBottom: '10px'
+                  }}
+                />
+                <button 
+                  className="settings-theme-btn" 
+                  onClick={loadYoutubeUrl}
+                  disabled={loading}
+                  style={{ width: '100%', opacity: loading ? 0.5 : 1 }}
+                >
+                  {loading ? 'loading...' : 'play'}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="settings-label" style={{ marginTop: '15px' }}>local file</div>
+                <button 
+                  className="settings-theme-btn" 
+                  onClick={handleSelectLocalAudio}
+                  style={{ width: '100%', marginBottom: '10px' }}
+                >
+                  select audio file
+                </button>
+                {localAudioPath && (
+                  <div style={{ 
+                    color: 'white', 
+                    fontSize: '10px', 
+                    textAlign: 'center', 
+                    wordBreak: 'break-all',
+                    fontFamily: 'Rainyhearts',
+                    opacity: 0.8
+                  }}>
+                    {localAudioPath.split('\\').pop()?.split('/').pop()}
+                  </div>
+                )}
+              </>
+            )}
+
+            {errorMessage && (
+              <div style={{
+                color: '#ff4e6a',
+                fontSize: '11px',
+                marginTop: '10px',
+                textAlign: 'center',
+                fontFamily: 'Rainyhearts',
+                lineHeight: '1.2'
+              }}>
+                {errorMessage}
+              </div>
+            )}
           </div>
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }

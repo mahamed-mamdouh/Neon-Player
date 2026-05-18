@@ -44,9 +44,9 @@
 .window-title {
   position: absolute;
   left: calc((134 - 110) / 306 * 100vw);
-  top: calc((50 - 23) / 306 * 100vw);
+  top: calc((51 - 23) / 306 * 100vw);
   font-family: 'Rainyhearts', monospace;
-  font-size: calc(20 / 306 * 100vw);
+  font-size: calc(15 / 306 * 100vw);
   color: var(--color-title);
   z-index: 50;
   pointer-events: none;
@@ -116,6 +116,95 @@
 .btn-settings {
   left: calc((305 - 110) / 306 * 100vw);
   top: calc((48 - 23) / 306 * 100vw);
+}
+
+/* Playlist Toggle Button */
+.btn-playlist-toggle {
+  position: absolute;
+  left: calc((252 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(10 / 306 * 100vw);
+  color: var(--color-title);
+  background: transparent;
+  border: calc(1 / 306 * 100vw) solid var(--color-title);
+  border-radius: calc(3 / 306 * 100vw);
+  cursor: pointer;
+  z-index: 150;
+  -webkit-app-region: no-drag;
+  user-select: none;
+  padding: calc(1 / 306 * 100vw) calc(5 / 306 * 100vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(18 / 306 * 100vw);
+}
+.btn-playlist-toggle:hover {
+  background: var(--color-title);
+  color: var(--color-panel-text);
+  border-color: var(--color-title);
+}
+
+/* Playlist Dropdown Panel */
+.playlist-panel {
+  position: absolute;
+  top: calc((70 - 23) / 306 * 100vw);
+  left: calc(5 / 306 * 100vw);
+  z-index: 300;
+  -webkit-app-region: no-drag;
+  pointer-events: auto;
+}
+
+.playlist-panel-inner {
+  background: var(--color-primary);
+  border: calc(2 / 306 * 100vw) solid var(--color-secondary);
+  border-radius: calc(4 / 306 * 100vw);
+  padding: calc(8 / 306 * 100vw);
+  width: calc(180 / 306 * 100vw);
+  max-height: calc(250 / 306 * 100vw);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: calc(4 / 306 * 100vw);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-panel-text) transparent;
+}
+
+.playlist-panel-inner::-webkit-scrollbar {
+  width: calc(4 / 306 * 100vw);
+}
+
+.playlist-panel-inner::-webkit-scrollbar-thumb {
+  background: var(--color-panel-text);
+  border-radius: calc(2 / 306 * 100vw);
+}
+
+.playlist-panel-item {
+  font-family: 'Rainyhearts', monospace;
+  font-size: calc(12 / 306 * 100vw);
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: calc(2 / 306 * 100vw);
+  color: var(--color-panel-text);
+  padding: calc(6 / 306 * 100vw) calc(8 / 306 * 100vw);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: calc(6 / 306 * 100vw);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.playlist-panel-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.playlist-panel-item.active {
+  background: var(--color-panel-text);
+  color: var(--color-primary);
 }
 
 .settings-panel {

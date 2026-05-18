@@ -67,6 +67,7 @@ function MarqueeText({ className, text }: { className: string; text: string }) {
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
+  const [showPlaylistSongs, setShowPlaylistSongs] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [playlist, setPlaylist] = useState<YouTubePlaylistItem[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -269,7 +270,7 @@ export default function App() {
 
       <img src={assets.frame} className="layer" alt="" draggable={false} />
 
-      <div className="window-title">cupid player</div>
+      <div className="window-title">neon player</div>
 
       <img src={assets.recordPlayer} className="record-player" alt="" draggable={false} />
       <img
@@ -445,7 +446,51 @@ export default function App() {
       <div className="btn btn-window" onClick={toggleMaximizeWindow} />
       <div className="btn btn-exit" onClick={closeWindow} />
 
-      <div className="btn btn-settings" onClick={() => setShowSettings((v) => !v)} />
+      <button className="btn-playlist-toggle" onClick={() => { setShowPlaylistSongs(v => !v); setShowSettings(false); }}>
+        ♫ songs
+      </button>
+
+      <div className="btn btn-settings" onClick={() => { setShowSettings((v) => !v); setShowPlaylistSongs(false); }} />
+
+      {showPlaylistSongs && (
+        <div className="playlist-panel">
+          <div className="playlist-panel-inner">
+            <div className="settings-label">playlist tracks</div>
+            {playlist.length === 0 ? (
+              <div className="settings-label" style={{ opacity: 0.5, fontStyle: 'italic', marginTop: '10px' }}>
+                no songs loaded
+              </div>
+            ) : (
+              playlist.map((item, idx) => (
+                <button
+                  key={idx}
+                  className={`playlist-panel-item ${idx === currentTrackIndex ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentTrackIndex(idx);
+                    setIsPlaying(true);
+                  }}
+                >
+                  {item.thumbnailUrl && (
+                    <img 
+                      src={item.thumbnailUrl} 
+                      style={{ 
+                        width: '20px', 
+                        height: '15px', 
+                        objectFit: 'cover', 
+                        imageRendering: 'pixelated', 
+                        borderRadius: '1px' 
+                      }} 
+                    />
+                  )}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {item.title}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {showSettings && (
         <div className="settings-panel">
@@ -491,27 +536,6 @@ export default function App() {
             >
               {loading ? 'loading...' : 'play'}
             </button>
-            
-            {playlist.length > 1 && (
-              <>
-                <div className="settings-label" style={{ marginTop: '20px' }}>playlist</div>
-                <div className="settings-playlist-list" style={{ maxHeight: '120px', overflowY: 'auto' }}>
-                  {playlist.map((item, idx) => (
-                    <button
-                      key={idx}
-                      className={`settings-playlist-item ${idx === currentTrackIndex ? 'active' : ''}`}
-                      onClick={() => {
-                        setCurrentTrackIndex(idx);
-                        setIsPlaying(true);
-                      }}
-                      style={{ opacity: idx === currentTrackIndex ? 1 : 0.6 }}
-                    >
-                      {item.title}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
           </div>
         </div>
       )}

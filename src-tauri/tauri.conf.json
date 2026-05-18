@@ -12,9 +12,12 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 600
+        "title": "Cupid Player",
+        "width": 415,
+        "height": 674,
+        "decorations": false,
+        "transparent": true,
+        "resizable": false
       }
     ],
     "security": {

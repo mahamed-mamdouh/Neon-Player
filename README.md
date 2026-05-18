@@ -109,10 +109,6 @@ Contributions make the open-source community an amazing place to learn, inspire,
 
 ---
 
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
 <div align="center">
-  <p>Created with 💖 by your-username</p>
+  <p>Created with 💖 by mahamed-mamdouh</p>
 </div>

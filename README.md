@@ -57,7 +57,11 @@
    ```
 
 3. **Configure Environment Variables:**
-   Create a `.env` file in the root directory:
+   Copy the provided `.env.example` template to a new `.env` file and insert your actual YouTube Data API key:
+   ```bash
+   cp .env.example .env
+   ```
+   Then open `.env` and configure your API key:
    ```env
    VITE_YOUTUBE_API_KEY=your_actual_youtube_data_api_key_here
    ```

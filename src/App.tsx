@@ -2,7 +2,8 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 import './App.css';
 import useTheme from './hooks/useTheme';
 import { YouTubeIframe } from './components/YouTubeIframe';
-import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem } from './utils/youtubeApi';
+import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem, extractYouTubeId } from './utils/youtubeApi';
+import { formatDuration } from './utils/time';
 import { resizeWindow, minimizeWindow, closeWindow } from './utils/windowApi';
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -36,13 +37,6 @@ function useResize(corner: string) {
   }, [corner]);
 
   return onMouseDown;
-}
-
-function formatTime(seconds: number) {
-  if (!seconds || !isFinite(seconds) || seconds < 0) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
 function MarqueeText({ className, text }: { className: string; text: string }) {
@@ -362,7 +356,7 @@ export default function App() {
     };
     const handleLoadedMetadata = () => {
       setDuration(audio.duration);
-      const durationStr = formatTime(audio.duration);
+      const durationStr = formatDuration(audio.duration);
       setLocalTrack(t => ({ ...t, duration: durationStr }));
     };
     const handleEnded = () => {
@@ -486,28 +480,16 @@ export default function App() {
     setLoading(true);
     setErrorMessage(null);
 
-    const isPlaylist = youtubeUrl.includes("list=") || youtubeUrl.includes("playlist");
-    
+    const parsed = extractYouTubeId(youtubeUrl);
+    if (!parsed) {
+      setErrorMessage("Invalid YouTube link, video ID, or playlist ID");
+      setLoading(false);
+      return;
+    }
+
     try {
-      if (isPlaylist) {
-        let playlistId: string | null = null;
-        try {
-          const parsedUrl = new URL(youtubeUrl);
-          playlistId = parsedUrl.searchParams.get("list");
-        } catch (e) {
-          const match = youtubeUrl.match(/[?&]list=([^#\&\?]+)/);
-          if (match) {
-            playlistId = match[1];
-          }
-        }
-
-        const isValidPlaylistId = playlistId && /^[a-zA-Z0-9_-]+$/.test(playlistId);
-        if (!playlistId || !isValidPlaylistId) {
-          setErrorMessage("Could not load this playlist. Please check the link or API key.");
-          setLoading(false);
-          return;
-        }
-
+      if (parsed.type === "playlist") {
+        const playlistId = parsed.id;
         const items = await fetchPlaylistItems(playlistId);
         if (!items || items.length === 0) {
           setErrorMessage("Could not load this playlist. Please check the link or API key.");
@@ -518,19 +500,7 @@ export default function App() {
         setCurrentTrackIndex(0);
         setIsPlaying(false); // Disables autoplay on launch/load!
       } else {
-        let id = youtubeUrl.trim();
-        const regex = /(?:v=|\/v\/|embed\/|youtu\.be\/|\/shorts\/)([^"&?\/\s]{11})/i;
-        const match = youtubeUrl.match(regex);
-        if (match && match[1]) {
-          id = match[1];
-        } else {
-          if (id.length !== 11) {
-            setErrorMessage("Invalid YouTube Link or Video ID.");
-            setLoading(false);
-            return;
-          }
-        }
-        
+        const id = parsed.id;
         const trackDetails = await fetchVideoDetails(id);
         if (trackDetails) {
           setPlaylist([trackDetails]);
@@ -694,8 +664,8 @@ export default function App() {
       </div>
 
       <div className="time-display">
-        <span className="time-current">{formatTime(currentTime)}</span>
-        <span className="time-remaining">{formatTime(duration - currentTime)}</span>
+        <span className="time-current">{formatDuration(currentTime)}</span>
+        <span className="time-remaining">{formatDuration(duration - currentTime)}</span>
       </div>
 
       <div className="drag-region" data-tauri-drag-region />

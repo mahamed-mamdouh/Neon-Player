@@ -26,11 +26,40 @@ export async function fetchPlaylistItems(playlistId: string): Promise<YouTubePla
       id: item.id,
       videoId: item.snippet.resourceId.videoId,
       title: item.snippet.title,
-      channelTitle: item.snippet.videoOwnerChannelTitle,
-      thumbnailUrl: item.snippet.thumbnails?.maxres?.url || item.snippet.thumbnails?.high?.url || "",
+      channelTitle: item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle || "Unknown Artist",
+      thumbnailUrl: item.snippet.thumbnails?.maxres?.url || item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || "",
     }));
   } catch (error) {
     console.error("YouTube API Error:", error);
     return [];
   }
+}
+
+export async function fetchVideoDetails(videoId: string): Promise<YouTubePlaylistItem | null> {
+  if (!API_KEY) {
+    console.warn("No YouTube API Key found.");
+    return null;
+  }
+
+  const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch video details");
+    const data = await response.json();
+
+    if (data.items && data.items.length > 0) {
+      const item = data.items[0];
+      return {
+        id: item.id,
+        videoId: item.id,
+        title: item.snippet.title,
+        channelTitle: item.snippet.channelTitle || "Unknown Artist",
+        thumbnailUrl: item.snippet.thumbnails?.maxres?.url || item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || "",
+      };
+    }
+  } catch (error) {
+    console.error("YouTube API Error fetching video:", error);
+  }
+  return null;
 }

@@ -2,7 +2,7 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 import './App.css';
 import useTheme from './hooks/useTheme';
 import { YouTubeIframe } from './components/YouTubeIframe';
-import { fetchPlaylistItems, YouTubePlaylistItem } from './utils/youtubeApi';
+import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem } from './utils/youtubeApi';
 import { resizeWindow, minimizeWindow, closeWindow, toggleMaximizeWindow } from './utils/windowApi';
 
 import progressBarStars from './assets/progress_bar_stars.png';
@@ -234,13 +234,18 @@ export default function App() {
       setIsPlaying(true);
     } else {
       let id = youtubeUrl;
-      const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const regex = /(?:v=|\/v\/|embed\/|youtu\.be\/|\/shorts\/)([^"&?\/\s]{11})/i;
       const match = youtubeUrl.match(regex);
       if (match && match[1]) id = match[1];
       
-      setPlaylist([{
-        id, videoId: id, title: "YouTube Stream", channelTitle: "Unknown", thumbnailUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
-      }]);
+      const trackDetails = await fetchVideoDetails(id);
+      if (trackDetails) {
+        setPlaylist([trackDetails]);
+      } else {
+        setPlaylist([{
+          id, videoId: id, title: "YouTube Stream", channelTitle: "Unknown Artist", thumbnailUrl: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`
+        }]);
+      }
       setCurrentTrackIndex(0);
       setIsPlaying(true);
     }

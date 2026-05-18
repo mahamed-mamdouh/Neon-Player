@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Cupid Player",
+        "title": "Neon Player",
         "width": 415,
         "height": 674,
         "decorations": false,

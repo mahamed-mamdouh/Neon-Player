@@ -59,6 +59,7 @@
   justify-content: space-between;
   gap: calc(8 / 306 * 100vw);
   width: 100%;
+  max-width: 415px;
   height: calc(42 / 306 * 100vw);
   margin-bottom: calc(10 / 306 * 100vw);
   box-sizing: border-box;
@@ -196,6 +197,7 @@
 /* Turntable brown wood/cardboard panel (Starts below Header!) */
 .vintage-turntable-panel {
   width: 100%;
+  max-width: 415px;
   height: calc(210 / 306 * 100vw);
   background: #a17855;
   border: calc(4 / 306 * 100vw) solid black;
@@ -505,6 +507,7 @@
 /* Now playing typography & labels */
 .vintage-now-playing {
   width: 100%;
+  max-width: 415px;
   text-align: center;
   margin-top: calc(6 / 306 * 100vw);
   box-sizing: border-box;
@@ -545,8 +548,9 @@
 /* Progress bar similar to the reference */
 .vintage-progress-container {
   width: 100%;
+  max-width: 415px;
   box-sizing: border-box;
-  padding: 0 calc(12 / 306 * 100vw);
+  padding: 0;
   cursor: pointer;
 }
 
@@ -600,7 +604,18 @@
   opacity: 0.7;
   margin-top: calc(2 / 306 * 100vw);
   box-sizing: border-box;
-  padding: 0 calc(4 / 306 * 100vw);
+  padding: 0 calc(2.5 / 306 * 100vw);
+}
+
+/* Grouped Controls Container */
+.vintage-controls-group {
+  width: 100%;
+  max-width: 415px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(6 / 306 * 100vw);
+  box-sizing: border-box;
 }
 
 /* Large simple playback buttons */
@@ -655,6 +670,7 @@
   letter-spacing: calc(0.3 / 306 * 100vw);
   text-align: center;
   width: 100%;
+  max-width: 415px;
   margin-top: calc(4 / 306 * 100vw);
 }
 
@@ -759,3 +775,81 @@
   background: black !important;
   color: #dbdcd9 !important;
 }
+
+/* Retro Volume Controls Row styling */
+.vintage-volume-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: calc(8 / 306 * 100vw);
+  width: 100%;
+  margin-top: 0;
+  box-sizing: border-box;
+  z-index: 30;
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.vintage-volume-btn {
+  background: none;
+  border: none;
+  color: black;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+  outline: none;
+}
+
+.vintage-volume-btn:hover {
+  transform: scale(1.1);
+}
+
+.vintage-volume-btn svg {
+  width: calc(18 / 306 * 100vw);
+  height: calc(18 / 306 * 100vw);
+}
+
+.vintage-volume-slider-wrapper {
+  display: flex;
+  align-items: center;
+  width: calc(70 / 306 * 100vw);
+}
+
+.vintage-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: calc(2 / 306 * 100vw);
+  background: black;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+/* Chrome, Safari, Opera, and Edge */
+.vintage-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: calc(8 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  border-radius: 50%;
+  background: black;
+  cursor: pointer;
+  border: none;
+}
+
+/* Firefox */
+.vintage-volume-slider::-moz-range-thumb {
+  width: calc(8 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  border-radius: 50%;
+  background: black;
+  cursor: pointer;
+  border: none;
+}
+

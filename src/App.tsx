@@ -115,8 +115,14 @@ export default function App() {
   const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.5);
-  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('neon_player_volume');
+    return saved !== null ? parseFloat(saved) : 0.5;
+  });
+  const [muted, setMuted] = useState(() => {
+    const saved = localStorage.getItem('neon_player_muted');
+    return saved === 'true';
+  });
   const [seekTime, setSeekTime] = useState<number | null>(null);
   const wasPlayingRef = useRef(false);
   
@@ -127,6 +133,15 @@ export default function App() {
   const seekRef = useRef<HTMLDivElement>(null);
 
   const { theme, selectTheme, assets } = useTheme();
+
+  // Save volume and muted states to local storage
+  useEffect(() => {
+    localStorage.setItem('neon_player_volume', volume.toString());
+  }, [volume]);
+
+  useEffect(() => {
+    localStorage.setItem('neon_player_muted', muted.toString());
+  }, [muted]);
 
   const [recordFrame, setRecordFrame] = useState(0);
   const [needleFrame, setNeedleFrame] = useState(0);
@@ -578,6 +593,10 @@ export default function App() {
             onTogglePlaylist={() => { setShowPlaylistSongs(v => !v); setShowSettings(false); }}
             showSettings={showSettings}
             showPlaylistSongs={showPlaylistSongs}
+            volume={volume}
+            muted={muted}
+            onToggleMute={toggleMute}
+            onChangeVolume={setVolume}
           />
         )}
 

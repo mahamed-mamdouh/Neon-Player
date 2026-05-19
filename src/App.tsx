@@ -4,6 +4,7 @@ import useTheme from './hooks/useTheme';
 import { YouTubeIframe } from './components/YouTubeIframe';
 import { fetchPlaylistItems, fetchVideoDetails, YouTubePlaylistItem, extractYouTubeId } from './utils/youtubeApi';
 import { formatDuration } from './utils/time';
+import VintageVinylTheme from './components/themes/VintageVinylTheme';
 import { resizeWindow, minimizeWindow, closeWindow } from './utils/windowApi';
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -125,7 +126,7 @@ export default function App() {
   const volumeBarRef = useRef<HTMLDivElement>(null);
   const seekRef = useRef<HTMLDivElement>(null);
 
-  const { theme, toggleTheme, assets } = useTheme();
+  const { theme, selectTheme, assets } = useTheme();
 
   const [recordFrame, setRecordFrame] = useState(0);
   const [needleFrame, setNeedleFrame] = useState(0);
@@ -530,7 +531,7 @@ export default function App() {
 
   return (
     <ErrorBoundary theme={theme} assets={assets}>
-      <div className={`player ${theme === 'blue' ? 'theme-blue' : ''}`}>
+      <div className={`player ${theme === 'blue' ? 'theme-blue' : theme === 'vintage' ? 'theme-vintage' : ''}`}>
         {currentMode === 'youtube' && currentTrack.videoId ? (
           <YouTubeIframe 
             videoId={currentTrack.videoId}
@@ -558,6 +559,25 @@ export default function App() {
             ref={localAudioRef}
             src={convertFileSrc(localAudioPath)}
             style={{ display: 'none' }}
+          />
+        )}
+
+        {theme === 'vintage' && (
+          <VintageVinylTheme
+            isPlaying={isPlaying}
+            currentTrack={currentTrack}
+            currentTime={currentTime}
+            duration={duration}
+            onTogglePlay={togglePlay}
+            onNext={() => next(true)}
+            onPrev={prev}
+            seek={seek}
+            onMinimize={minimizeWindow}
+            onClose={closeWindow}
+            onToggleSettings={() => { setShowSettings(v => !v); setShowPlaylistSongs(false); }}
+            onTogglePlaylist={() => { setShowPlaylistSongs(v => !v); setShowSettings(false); }}
+            showSettings={showSettings}
+            showPlaylistSongs={showPlaylistSongs}
           />
         )}
 
@@ -801,15 +821,21 @@ export default function App() {
             <div className="settings-theme-row">
               <button
                 className={`settings-theme-btn ${theme === 'pink' ? 'active' : ''}`}
-                onClick={() => { if (theme !== 'pink') toggleTheme(); }}
+                onClick={() => selectTheme('pink')}
               >
                 pink
               </button>
               <button
                 className={`settings-theme-btn ${theme === 'blue' ? 'active' : ''}`}
-                onClick={() => { if (theme !== 'blue') toggleTheme(); }}
+                onClick={() => selectTheme('blue')}
               >
                 blue
+              </button>
+              <button
+                className={`settings-theme-btn ${theme === 'vintage' ? 'active' : ''}`}
+                onClick={() => selectTheme('vintage')}
+              >
+                vintage
               </button>
             </div>
 

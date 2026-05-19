@@ -137,7 +137,7 @@ const STORAGE_KEY = 'cupid-player-theme';
 function getStoredTheme() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'pink' || stored === 'blue') return stored;
+    if (stored === 'pink' || stored === 'blue' || stored === 'vintage') return stored;
   } catch {
     // localStorage unavailable
   }
@@ -151,9 +151,20 @@ function getStoredTheme() {
 export default function useTheme() {
   const [theme, setTheme] = useState(getStoredTheme);
 
+  const selectTheme = useCallback((next: string) => {
+    if (next === 'pink' || next === 'blue' || next === 'vintage') {
+      setTheme(next);
+      try {
+        localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignore
+      }
+    }
+  }, []);
+
   const toggleTheme = useCallback(() => {
     setTheme((prev: string) => {
-      const next = prev === 'pink' ? 'blue' : 'pink';
+      const next = prev === 'pink' ? 'blue' : prev === 'blue' ? 'vintage' : 'pink';
       try {
         localStorage.setItem(STORAGE_KEY, next);
       } catch {
@@ -163,7 +174,9 @@ export default function useTheme() {
     });
   }, []);
 
-  const assets = useMemo(() => THEME_ASSETS[theme as keyof typeof THEME_ASSETS], [theme]);
+  const assets = useMemo(() => {
+    return THEME_ASSETS[theme === 'vintage' ? 'pink' : (theme as 'pink' | 'blue')];
+  }, [theme]);
 
-  return { theme, toggleTheme, assets };
+  return { theme, toggleTheme, selectTheme, assets };
 }

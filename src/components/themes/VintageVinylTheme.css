@@ -1,0 +1,761 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@400;500;600&display=swap');
+
+/* Vintage Vinyl Theme Styles */
+
+* {
+  box-sizing: border-box;
+}
+
+.vintage-theme-container {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+}
+
+/* Subtle printed card paper texture */
+.vintage-theme-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.08;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+.vintage-card {
+  width: 100vw;
+  height: 100vh;
+  box-sizing: border-box;
+  padding: calc(24 / 306 * 100vw) calc(28 / 306 * 100vw) calc(18 / 306 * 100vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  border: 4px solid #111;
+  border-radius: 34px;
+  background: #c8cec7;
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Top Bar OUTSIDE the tan turntable panel */
+.vintage-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(8 / 306 * 100vw);
+  width: 100%;
+  height: calc(42 / 306 * 100vw);
+  margin-bottom: calc(10 / 306 * 100vw);
+  box-sizing: border-box;
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+  -webkit-app-region: drag; /* Draggable empty header area! */
+}
+
+.vintage-logo {
+  font-family: 'Rainyhearts', sans-serif;
+  font-size: calc(24 / 306 * 100vw);
+  color: black;
+  letter-spacing: calc(0.5 / 306 * 100vw);
+  white-space: nowrap;
+  overflow: hidden;
+  margin-left: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  -webkit-app-region: drag;
+}
+
+.vintage-songs-btn {
+  background: rgba(0, 0, 0, 0.05);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: calc(6 / 306 * 100vw);
+  color: black;
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(10 / 306 * 100vw);
+  font-weight: 600;
+  padding: calc(2 / 306 * 100vw) calc(8 / 306 * 100vw);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease;
+  outline: none;
+  height: calc(20 / 306 * 100vw);
+  box-sizing: border-box;
+  white-space: nowrap;
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+  -webkit-app-region: no-drag !important; /* Make songs button clickable */
+}
+
+.vintage-songs-btn:hover, .vintage-songs-btn.active {
+  background: black;
+  color: #dbdcd9;
+}
+
+.vintage-songs-btn:active {
+  transform: scale(0.95);
+}
+
+.vintage-top-controls {
+  display: flex;
+  align-items: center;
+  gap: calc(6 / 306 * 100vw);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+  -webkit-app-region: no-drag !important; /* Make control container clickable */
+}
+
+.vintage-icon-btn {
+  width: calc(22 / 306 * 100vw);
+  height: calc(22 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.05);
+  color: black;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background 0.2s ease, transform 0.1s ease, color 0.2s ease;
+  outline: none;
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+  -webkit-app-region: no-drag !important; /* Make icon button clickable */
+}
+
+.vintage-icon-btn:hover, .vintage-icon-btn.active {
+  background: black;
+  color: #dbdcd9;
+}
+
+.vintage-icon-btn:active {
+  transform: scale(0.95);
+}
+
+.vintage-icon-btn.btn-close::before {
+  content: "×";
+  font-size: calc(14 / 306 * 100vw);
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  margin-top: calc(-1 / 306 * 100vw);
+}
+
+.vintage-icon-btn.btn-minimize::before {
+  content: "−";
+  font-size: calc(12 / 306 * 100vw);
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.vintage-icon-btn.btn-settings::before {
+  content: "⚙";
+  font-size: calc(12 / 306 * 100vw);
+  font-family: Arial, sans-serif;
+  line-height: 1;
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* WINDOW CONTROL RESETS (OVERWRITE ABSOLUTE COZY THEME OFFSETS) */
+/* ───────────────────────────────────────────────────────────── */
+.vintage-top-controls .btn-settings,
+.vintage-top-controls .btn-minimize,
+.vintage-top-controls .btn-close {
+  left: 0 !important;
+  top: 0 !important;
+  position: relative !important;
+  margin: 0 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Turntable brown wood/cardboard panel (Starts below Header!) */
+.vintage-turntable-panel {
+  width: 100%;
+  height: calc(210 / 306 * 100vw);
+  background: #a17855;
+  border: calc(4 / 306 * 100vw) solid black;
+  border-radius: calc(16 / 306 * 100vw);
+  padding: calc(12 / 306 * 100vw) calc(14 / 306 * 100vw) calc(18 / 306 * 100vw);
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: inset 0 0 calc(20 / 306 * 100vw) rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0;
+}
+
+/* Top left dials / detail decorations */
+.dial-top-left-group {
+  position: absolute;
+  top: calc(14 / 306 * 100vw);
+  left: calc(14 / 306 * 100vw);
+  display: flex;
+  gap: calc(8 / 306 * 100vw);
+  align-items: center;
+  z-index: 10;
+}
+
+.dial-circle-outer {
+  width: calc(20 / 306 * 100vw);
+  height: calc(20 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: 50%;
+  background: #a5aba6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dial-circle-inner {
+  width: calc(12 / 306 * 100vw);
+  height: calc(12 / 306 * 100vw);
+  border: calc(1.5 / 306 * 100vw) solid black;
+  border-radius: 50%;
+  background: black;
+}
+
+.dial-dots {
+  display: flex;
+  gap: calc(3 / 306 * 100vw);
+}
+
+.dial-dot {
+  width: calc(6 / 306 * 100vw);
+  height: calc(6 / 306 * 100vw);
+  background: #4a4d4a;
+  border: calc(1.5 / 306 * 100vw) solid black;
+  border-radius: 50%;
+}
+
+/* Bottom left dials */
+.dial-bottom-left-group {
+  position: absolute;
+  bottom: calc(12 / 306 * 100vw);
+  left: calc(14 / 306 * 100vw);
+  display: flex;
+  gap: calc(6 / 306 * 100vw);
+  align-items: center;
+}
+
+.dial-btn-circle {
+  width: calc(16 / 306 * 100vw);
+  height: calc(16 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: 50%;
+  background: #4a4d4a;
+}
+
+.dial-btn-pill {
+  width: calc(26 / 306 * 100vw);
+  height: calc(14 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: calc(6 / 306 * 100vw);
+  background: #4a4d4a;
+}
+
+.vintage-brand {
+  position: absolute;
+  bottom: calc(8 / 306 * 100vw);
+  right: calc(14 / 306 * 100vw);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: calc(11 / 306 * 100vw);
+  font-style: italic;
+  font-weight: bold;
+  color: black;
+  opacity: 0.8;
+}
+
+/* Black Vinyl Record */
+.vintage-vinyl-wrapper {
+  position: absolute;
+  width: calc(150 / 306 * 100vw);
+  height: calc(150 / 306 * 100vw);
+  top: calc(24 / 306 * 100vw);
+  left: calc((100% - calc(150 / 306 * 100vw)) / 2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  transition: transform 0.6s ease-in-out;
+}
+
+.vintage-vinyl {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #111111;
+  border: calc(3.5 / 306 * 100vw) solid black;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 calc(4 / 306 * 100vw) calc(10 / 306 * 100vw) rgba(0, 0, 0, 0.25);
+}
+
+/* Record grooving texture */
+.vintage-vinyl::before {
+  content: "";
+  position: absolute;
+  width: calc(120 / 306 * 100vw);
+  height: calc(120 / 306 * 100vw);
+  border-radius: 50%;
+  border: calc(1 / 306 * 100vw) dashed rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.vinyl-groove-1 {
+  position: absolute;
+  width: calc(96 / 306 * 100vw);
+  height: calc(96 / 306 * 100vw);
+  border-radius: 50%;
+  border: calc(1 / 306 * 100vw) solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.vinyl-groove-2 {
+  position: absolute;
+  width: calc(72 / 306 * 100vw);
+  height: calc(72 / 306 * 100vw);
+  border-radius: 50%;
+  border: calc(1 / 306 * 100vw) solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+/* Record label in the center */
+.vinyl-center-label {
+  width: calc(48 / 306 * 100vw);
+  height: calc(48 / 306 * 100vw);
+  border-radius: 50%;
+  background: #dbdcd9;
+  border: calc(2 / 306 * 100vw) solid black;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 6;
+  position: relative;
+}
+
+.vinyl-album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(40%) contrast(95%);
+}
+
+.vinyl-fallback-label {
+  width: 100%;
+  height: 100%;
+  background: #dbdcd9;
+}
+
+.vinyl-spindle-hole {
+  width: calc(6 / 306 * 100vw);
+  height: calc(6 / 306 * 100vw);
+  border-radius: 50%;
+  background: #111111;
+  border: calc(1.5 / 306 * 100vw) solid black;
+  z-index: 7;
+  position: absolute;
+}
+
+/* Tonearm track (vertical slider details on right) */
+.vintage-tonearm-track {
+  position: absolute;
+  top: calc(14 / 306 * 100vw);
+  right: calc(16 / 306 * 100vw);
+  height: calc(152 / 306 * 100vw);
+  width: calc(12 / 306 * 100vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.track-cap-top {
+  width: calc(12 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: calc(2 / 306 * 100vw);
+  background: #4a4d4a;
+}
+
+.track-line {
+  flex: 1;
+  width: calc(3 / 306 * 100vw);
+  background: black;
+}
+
+.track-cap-bottom {
+  width: calc(12 / 306 * 100vw);
+  height: calc(12 / 306 * 100vw);
+  border: calc(2 / 306 * 100vw) solid black;
+  border-radius: calc(3 / 306 * 100vw);
+  background: #4a4d4a;
+}
+
+/* Tonearm component pivot, arm and cartridge head */
+.vintage-tonearm-container {
+  position: absolute;
+  top: calc(16 / 306 * 100vw);
+  right: calc(18 / 306 * 100vw);
+  width: calc(24 / 306 * 100vw);
+  height: calc(130 / 306 * 100vw);
+  z-index: 10;
+  transform-origin: 50% calc(10 / 306 * 100vw); /* rotate around pivot center */
+  transform: rotate(-8deg); /* rested / off state */
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+}
+
+.vintage-tonearm-container.tonearm-playing {
+  transform: rotate(18deg); /* playing / on state */
+}
+
+.tonearm-pivot {
+  width: calc(14 / 306 * 100vw);
+  height: calc(14 / 306 * 100vw);
+  border-radius: 50%;
+  background: #4a4d4a;
+  border: calc(2 / 306 * 100vw) solid black;
+  position: absolute;
+  top: calc(3 / 306 * 100vw);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+}
+
+.tonearm-arm {
+  position: absolute;
+  top: calc(10 / 306 * 100vw);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(3.5 / 306 * 100vw);
+  height: calc(105 / 306 * 100vw);
+  background: black;
+  z-index: 11;
+}
+
+/* Cartridge head pointing at needle contact */
+.tonearm-head {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(15deg);
+  width: calc(8 / 306 * 100vw);
+  height: calc(15 / 306 * 100vw);
+  background: #4a4d4a;
+  border: calc(1.5 / 306 * 100vw) solid black;
+  border-radius: calc(2 / 306 * 100vw);
+  z-index: 12;
+}
+
+/* Animations */
+
+/* 1. Spinning Vinyl animation */
+.vinyl-spinning .vintage-vinyl {
+  animation: spinRecord 4s linear infinite;
+}
+
+@keyframes spinRecord {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 2. Record change slide/swap animation */
+.record-changing {
+  animation: changeRecord 0.8s ease-in-out forwards;
+}
+
+@keyframes changeRecord {
+  0% { transform: scale(1) translate(0, 0); opacity: 1; }
+  35% { transform: scale(0.9) translate(calc(-80 / 306 * 100vw), calc(30 / 306 * 100vw)); opacity: 0; }
+  65% { transform: scale(0.9) translate(calc(80 / 306 * 100vw), calc(-30 / 306 * 100vw)); opacity: 0; }
+  100% { transform: scale(1) translate(0, 0); opacity: 1; }
+}
+
+/* Now playing typography & labels */
+.vintage-now-playing {
+  width: 100%;
+  text-align: center;
+  margin-top: calc(6 / 306 * 100vw);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 / 306 * 100vw);
+}
+
+.vintage-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: calc(22 / 306 * 100vw);
+  font-weight: 700;
+  color: black;
+  margin: 0;
+  padding: 0;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: calc(-0.5 / 306 * 100vw);
+  width: 100%;
+}
+
+.vintage-artist {
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(14 / 306 * 100vw);
+  font-weight: 500;
+  color: black;
+  opacity: 0.85;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* Progress bar similar to the reference */
+.vintage-progress-container {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 calc(12 / 306 * 100vw);
+  cursor: pointer;
+}
+
+.progress-line-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: calc(14 / 306 * 100vw);
+  width: 100%;
+}
+
+.progress-cap-left, .progress-cap-right {
+  width: calc(2.5 / 306 * 100vw);
+  height: calc(10 / 306 * 100vw);
+  background: black;
+  flex-shrink: 0;
+}
+
+.progress-line {
+  flex: 1;
+  height: calc(2.5 / 306 * 100vw);
+  background: black;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.progress-line-fill {
+  height: 100%;
+  background: black;
+  width: 0%;
+}
+
+/* Small playhead dot/knob */
+.progress-knob {
+  width: calc(8 / 306 * 100vw);
+  height: calc(8 / 306 * 100vw);
+  background: black;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vintage-time-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(9 / 306 * 100vw);
+  font-weight: 500;
+  color: black;
+  opacity: 0.7;
+  margin-top: calc(2 / 306 * 100vw);
+  box-sizing: border-box;
+  padding: 0 calc(4 / 306 * 100vw);
+}
+
+/* Large simple playback buttons */
+.vintage-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: calc(28 / 306 * 100vw);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vintage-btn {
+  background: none;
+  border: none;
+  color: black;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  outline: none;
+}
+
+.vintage-btn:hover {
+  transform: scale(1.08);
+}
+
+.vintage-btn:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.vintage-btn.btn-prev svg, .vintage-btn.btn-next svg {
+  width: calc(36 / 306 * 100vw);
+  height: calc(36 / 306 * 100vw);
+}
+
+.vintage-btn.btn-play svg {
+  width: calc(48 / 306 * 100vw);
+  height: calc(48 / 306 * 100vw);
+}
+
+/* Footer text mimicking the location in the reference */
+.vintage-footer {
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(9 / 306 * 100vw);
+  font-weight: 500;
+  color: black;
+  opacity: 0.7;
+  letter-spacing: calc(0.3 / 306 * 100vw);
+  text-align: center;
+  width: 100%;
+  margin-top: calc(4 / 306 * 100vw);
+}
+
+/* ───────────────────────────────────────────────────────────── */
+/* VINTAGE THEME LAYOUT OVERRIDES                                */
+/* ───────────────────────────────────────────────────────────── */
+
+/* Hide default pink/blue layers when vintage theme is active */
+.player.theme-vintage > .layer,
+.player.theme-vintage > .record-player,
+.player.theme-vintage > .now-playing,
+.player.theme-vintage > .time-display,
+.player.theme-vintage > .progress-seek,
+.player.theme-vintage > .album-mask,
+.player.theme-vintage > .album-frame-layer,
+.player.theme-vintage > .btn:not(.btn-exit):not(.btn-minimize):not(.btn-settings) {
+  display: none !important;
+}
+
+/* Hide global absolute window and settings buttons from App.tsx in vintage theme */
+.player.theme-vintage > .btn-minimize,
+.player.theme-vintage > .btn-window,
+.player.theme-vintage > .btn-exit,
+.player.theme-vintage > .btn-settings,
+.player.theme-vintage > .btn-playlist-toggle,
+.player.theme-vintage > .window-title,
+.player.theme-vintage > .drag-region {
+  display: none !important;
+}
+
+.player.theme-vintage {
+  background: transparent !important;
+  --color-title: black;
+  --color-primary: black;
+  --color-secondary: #4a4d4a;
+  --color-panel-text: #dbdcd9;
+}
+
+/* Cohesive overlay dropdown panels styling */
+.player.theme-vintage .settings-panel,
+.player.theme-vintage .playlist-panel {
+  border: calc(2.5 / 306 * 100vw) solid black !important;
+  border-radius: calc(10 / 306 * 100vw) !important;
+  background: #dbdcd9 !important;
+  box-shadow: 0 calc(4 / 306 * 100vw) calc(12 / 306 * 100vw) rgba(0, 0, 0, 0.25) !important;
+  z-index: 100 !important;
+  top: calc(85 / 306 * 100vw) !important;
+  left: calc(30 / 306 * 100vw) !important;
+  width: calc(246 / 306 * 100vw) !important;
+  height: calc(320 / 306 * 100vw) !important;
+  transform: none !important; /* Overwrite cozy translateX offset */
+}
+
+/* Style Inner Content Panels to Take Full Width/Height and Match Wood Paper Styling */
+.player.theme-vintage .settings-panel-inner,
+.player.theme-vintage .playlist-panel-inner {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: calc(20 / 306 * 100vw) !important;
+  box-sizing: border-box !important;
+}
+
+.player.theme-vintage .settings-panel-inner .settings-label {
+  color: black !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: calc(12 / 306 * 100vw) !important;
+}
+
+.player.theme-vintage .settings-panel-inner input {
+  border: calc(2.5 / 306 * 100vw) solid black !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: black !important;
+  border-radius: calc(8 / 306 * 100vw) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: calc(10 / 306 * 100vw) !important;
+  padding: calc(4 / 306 * 100vw) calc(8 / 306 * 100vw) !important;
+  height: calc(26 / 306 * 100vw) !important;
+}
+
+.player.theme-vintage .settings-panel-inner .settings-theme-btn,
+.player.theme-vintage .playlist-panel-item {
+  border: calc(2.5 / 306 * 100vw) solid black !important;
+  border-radius: calc(8 / 306 * 100vw) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: bold !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  color: black !important;
+  font-size: calc(10 / 306 * 100vw) !important;
+  height: calc(24 / 306 * 100vw) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.player.theme-vintage .settings-panel-inner .settings-theme-btn.active,
+.player.theme-vintage .playlist-panel-item.active {
+  background: black !important;
+  color: #dbdcd9 !important;
+}

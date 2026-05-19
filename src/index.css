@@ -18,15 +18,7 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: #c8d8f6; /* Fallback frame color */
-}
-
-/* Dynamically color window background based on active theme to prevent flashes and transparent gaps */
-body:has(.theme-blue) {
-  background: #c8d3f6;
-}
-body:has(.player:not(.theme-blue)) {
-  background: #f6cfc8;
+  background: transparent !important;
 }
 
 * {

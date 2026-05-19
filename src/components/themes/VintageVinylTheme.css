@@ -184,6 +184,7 @@
 /* WINDOW CONTROL RESETS (OVERWRITE ABSOLUTE COZY THEME OFFSETS) */
 /* ───────────────────────────────────────────────────────────── */
 .vintage-top-controls .btn-settings,
+.vintage-top-controls .btn-pin,
 .vintage-top-controls .btn-minimize,
 .vintage-top-controls .btn-close {
   left: 0 !important;
@@ -192,6 +193,12 @@
   margin: 0 !important;
   transform: none !important;
   box-shadow: none !important;
+}
+
+.vintage-icon-btn.btn-pin svg {
+  width: calc(11 / 306 * 100vw);
+  height: calc(11 / 306 * 100vw);
+  display: block;
 }
 
 /* Turntable brown wood/cardboard panel (Starts below Header!) */

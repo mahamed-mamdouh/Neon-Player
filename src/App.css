@@ -120,6 +120,34 @@
   top: calc((48 - 23) / 306 * 100vw);
 }
 
+.btn-pin {
+  left: calc((330 - 110) / 306 * 100vw);
+  top: calc((48 - 23) / 306 * 100vw);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(3.5 / 306 * 100vw);
+  color: var(--color-primary);
+  opacity: 0.65;
+  transition: all 0.2s ease;
+}
+
+.btn-pin:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.btn-pin.active {
+  opacity: 1;
+  color: #ff4e6a;
+  filter: drop-shadow(0 0 calc(2 / 306 * 100vw) #ff4e6a);
+}
+
+.theme-blue .btn-pin.active {
+  color: #00f0ff;
+  filter: drop-shadow(0 0 calc(2 / 306 * 100vw) #00f0ff);
+}
+
 /* Playlist Toggle Button */
 .btn-playlist-toggle {
   position: absolute;

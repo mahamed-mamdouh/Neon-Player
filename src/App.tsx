@@ -9,6 +9,7 @@ import { resizeWindow, minimizeWindow, closeWindow } from './utils/windowApi';
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import progressBarStars from './assets/progress_bar_stars.png';
 import star from './assets/star.png';
@@ -62,6 +63,18 @@ function MarqueeText({ className, text }: { className: string; text: string }) {
     </div>
   );
 }
+
+const PinIcon = () => (
+  <svg 
+    width="100%" 
+    height="100%" 
+    viewBox="0 0 16 16" 
+    fill="currentColor"
+    style={{ imageRendering: 'pixelated' }}
+  >
+    <path d="M7 3h2v1H7zM6 4h4v1H6zM5 5h6v2H5zM6 7h4v1H6zM7 8v5h2V8z" />
+  </svg>
+);
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -142,6 +155,34 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('neon_player_muted', muted.toString());
   }, [muted]);
+
+  const [isPinned, setIsPinned] = useState(() => {
+    const saved = localStorage.getItem('neon_player_pinned');
+    return saved === 'true';
+  });
+
+  useEffect(() => {
+    const updateAlwaysOnTop = async () => {
+      try {
+        const appWindow = getCurrentWindow();
+        await appWindow.setAlwaysOnTop(isPinned);
+      } catch (err) {
+        console.error("Failed to set always on top:", err);
+        setErrorMessage("Always on Top failed to activate.");
+        setIsPinned(false);
+        localStorage.setItem('neon_player_pinned', 'false');
+      }
+    };
+    updateAlwaysOnTop();
+  }, [isPinned]);
+
+  const handleTogglePin = () => {
+    setIsPinned((prev) => {
+      const next = !prev;
+      localStorage.setItem('neon_player_pinned', next.toString());
+      return next;
+    });
+  };
 
   const [recordFrame, setRecordFrame] = useState(0);
   const [needleFrame, setNeedleFrame] = useState(0);
@@ -597,6 +638,8 @@ export default function App() {
             muted={muted}
             onToggleMute={toggleMute}
             onChangeVolume={setVolume}
+            isPinned={isPinned}
+            onTogglePin={handleTogglePin}
           />
         )}
 
@@ -787,6 +830,14 @@ export default function App() {
       </button>
 
       <div className="btn btn-settings" onClick={() => { setShowSettings((v) => !v); setShowPlaylistSongs(false); }} />
+
+      <div 
+        className={`btn btn-pin ${isPinned ? 'active' : ''}`} 
+        onClick={handleTogglePin} 
+        title={isPinned ? "Always on Top: ON" : "Always on Top: OFF"}
+      >
+        <PinIcon />
+      </div>
 
       {showPlaylistSongs && (
         <div className="playlist-panel">

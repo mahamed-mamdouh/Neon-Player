@@ -3,6 +3,18 @@ import './VintageVinylTheme.css';
 import { formatDuration } from '../../utils/time';
 import { YouTubePlaylistItem } from '../../utils/youtubeApi';
 
+const PinIcon = () => (
+  <svg 
+    width="100%" 
+    height="100%" 
+    viewBox="0 0 16 16" 
+    fill="currentColor"
+    style={{ imageRendering: 'pixelated' }}
+  >
+    <path d="M7 3h2v1H7zM6 4h4v1H6zM5 5h6v2H5zM6 7h4v1H6zM7 8v5h2V8z" />
+  </svg>
+);
+
 interface VintageVinylThemeProps {
   isPlaying: boolean;
   currentTrack: YouTubePlaylistItem;
@@ -22,6 +34,8 @@ interface VintageVinylThemeProps {
   muted: boolean;
   onToggleMute: () => void;
   onChangeVolume: (val: number) => void;
+  isPinned: boolean;
+  onTogglePin: () => void;
 }
 
 export default function VintageVinylTheme({
@@ -43,6 +57,8 @@ export default function VintageVinylTheme({
   muted,
   onToggleMute,
   onChangeVolume,
+  isPinned,
+  onTogglePin,
 }: VintageVinylThemeProps) {
   const [isChanging, setIsChanging] = useState(false);
   const prevTrackIdRef = useRef<string | null>(null);
@@ -110,6 +126,14 @@ export default function VintageVinylTheme({
               onMouseDown={(e) => e.stopPropagation()}
               title="Settings" 
             />
+            <button 
+              className={`vintage-icon-btn btn-pin ${isPinned ? 'active' : ''}`} 
+              onClick={(e) => { e.stopPropagation(); onTogglePin(); }} 
+              onMouseDown={(e) => e.stopPropagation()}
+              title={isPinned ? "Always on Top: ON" : "Always on Top: OFF"}
+            >
+              <PinIcon />
+            </button>
             <button 
               className="vintage-icon-btn btn-minimize" 
               onClick={(e) => { e.stopPropagation(); onMinimize(); }} 

@@ -137,7 +137,7 @@ const STORAGE_KEY = 'cupid-player-theme';
 function getStoredTheme() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'pink' || stored === 'blue' || stored === 'vintage') return stored;
+    if (stored === 'pink' || stored === 'blue' || stored === 'vintage' || stored === 'nature') return stored;
   } catch {
     // localStorage unavailable
   }
@@ -152,7 +152,7 @@ export default function useTheme() {
   const [theme, setTheme] = useState(getStoredTheme);
 
   const selectTheme = useCallback((next: string) => {
-    if (next === 'pink' || next === 'blue' || next === 'vintage') {
+    if (next === 'pink' || next === 'blue' || next === 'vintage' || next === 'nature') {
       setTheme(next);
       try {
         localStorage.setItem(STORAGE_KEY, next);
@@ -164,7 +164,7 @@ export default function useTheme() {
 
   const toggleTheme = useCallback(() => {
     setTheme((prev: string) => {
-      const next = prev === 'pink' ? 'blue' : prev === 'blue' ? 'vintage' : 'pink';
+      const next = prev === 'pink' ? 'blue' : prev === 'blue' ? 'vintage' : prev === 'vintage' ? 'nature' : 'pink';
       try {
         localStorage.setItem(STORAGE_KEY, next);
       } catch {
@@ -175,7 +175,7 @@ export default function useTheme() {
   }, []);
 
   const assets = useMemo(() => {
-    return THEME_ASSETS[theme === 'vintage' ? 'pink' : (theme as 'pink' | 'blue')];
+    return THEME_ASSETS[(theme === 'vintage' || theme === 'nature') ? 'pink' : (theme as 'pink' | 'blue')];
   }, [theme]);
 
   return { theme, toggleTheme, selectTheme, assets };

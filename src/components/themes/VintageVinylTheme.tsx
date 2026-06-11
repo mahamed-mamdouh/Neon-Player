@@ -3,15 +3,72 @@ import './VintageVinylTheme.css';
 import { formatDuration } from '../../utils/time';
 import { YouTubePlaylistItem } from '../../utils/youtubeApi';
 
-const PinIcon = () => (
-  <svg 
-    width="100%" 
-    height="100%" 
-    viewBox="0 0 16 16" 
-    fill="currentColor"
-    style={{ imageRendering: 'pixelated' }}
-  >
-    <path d="M7 3h2v1H7zM6 4h4v1H6zM5 5h6v2H5zM6 7h4v1H6zM7 8v5h2V8z" />
+// Clean SVG Icons to match mockup
+const SettingsIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    <path d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+  </svg>
+);
+
+const UpArrowIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
+    <path d="M12 18V6M7 11l5-5 5 5" />
+  </svg>
+);
+
+const MinimizeIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="5" y="11" width="14" height="2.5" />
+  </svg>
+);
+
+const CloseIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+    <path d="M7 7l10 10M17 7L7 17" />
+  </svg>
+);
+
+const PrevIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="5" y="6" width="3" height="12" />
+    <polygon points="19,6 9,12 19,18" />
+  </svg>
+);
+
+const PlayIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="7,5 20,12 7,19" />
+  </svg>
+);
+
+const PauseIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <rect x="6" y="5" width="4" height="14" />
+    <rect x="14" y="5" width="4" height="14" />
+  </svg>
+);
+
+const NextIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="5,6 15,12 5,18" />
+    <rect x="16" y="6" width="3" height="12" />
+  </svg>
+);
+
+const VolumeIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+    <rect x="14" y="9" width="2" height="6" />
+    <rect x="18" y="7" width="2" height="10" />
+  </svg>
+);
+
+const VolumeMuteIcon = () => (
+  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+    <path d="M15 9l4 6M19 9l-4 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square" />
   </svg>
 );
 
@@ -66,7 +123,6 @@ export default function VintageVinylTheme({
   useEffect(() => {
     const trackId = currentTrack.id;
     if (prevTrackIdRef.current !== null && prevTrackIdRef.current !== trackId) {
-      // Song changed! Trigger the vinyl swap animation
       setIsChanging(true);
       const timer = setTimeout(() => {
         setIsChanging(false);
@@ -109,7 +165,6 @@ export default function VintageVinylTheme({
   return (
     <div className="vintage-theme-container">
       <div className="vintage-card" data-tauri-drag-region>
-        {/* Top Header Row (placed OUTSIDE the turntable box!) */}
         <div className="vintage-top-bar" data-tauri-drag-region>
           <div className="vintage-logo" data-tauri-drag-region>neon</div>
           <button 
@@ -125,33 +180,37 @@ export default function VintageVinylTheme({
               onClick={(e) => { e.stopPropagation(); onToggleSettings(); }} 
               onMouseDown={(e) => e.stopPropagation()}
               title="Settings" 
-            />
+            >
+              <SettingsIcon />
+            </button>
             <button 
               className={`vintage-icon-btn btn-pin ${isPinned ? 'active' : ''}`} 
               onClick={(e) => { e.stopPropagation(); onTogglePin(); }} 
               onMouseDown={(e) => e.stopPropagation()}
               title={isPinned ? "Always on Top: ON" : "Always on Top: OFF"}
             >
-              <PinIcon />
+              <UpArrowIcon />
             </button>
             <button 
               className="vintage-icon-btn btn-minimize" 
               onClick={(e) => { e.stopPropagation(); onMinimize(); }} 
               onMouseDown={(e) => e.stopPropagation()}
               title="Minimize" 
-            />
+            >
+              <MinimizeIcon />
+            </button>
             <button 
               className="vintage-icon-btn btn-close" 
               onClick={(e) => { e.stopPropagation(); onClose(); }} 
               onMouseDown={(e) => e.stopPropagation()}
               title="Close" 
-            />
+            >
+              <CloseIcon />
+            </button>
           </div>
         </div>
 
-        {/* Record Player Box (turntable panel starting below the header) */}
         <div className="vintage-turntable-panel" onMouseDown={(e) => e.stopPropagation()}>
-          {/* Top Left dial and dots details */}
           <div className="dial-top-left-group">
             <div className="dial-circle-outer">
               <div className="dial-circle-inner" />
@@ -162,24 +221,21 @@ export default function VintageVinylTheme({
             </div>
           </div>
           
-          {/* Vinyl record inside tan panel */}
           <div className={`vintage-vinyl-wrapper ${isPlaying && !isChanging ? 'vinyl-spinning' : ''} ${isChanging ? 'record-changing' : ''}`}>
             <div className="vintage-vinyl">
               <div className="vinyl-groove-1" />
               <div className="vinyl-groove-2" />
-              {/* Center label with subtle album art grayscale sepia styling */}
               <div className="vinyl-center-label">
                 {currentTrack.thumbnailUrl ? (
                   <img src={currentTrack.thumbnailUrl} className="vinyl-album-art" alt="" draggable={false} />
                 ) : (
                   <div className="vinyl-fallback-label" />
                 )}
+                <div className="vinyl-spindle-hole" />
               </div>
-              <div className="vinyl-spindle-hole" />
             </div>
           </div>
 
-          {/* Tonearm track and arm */}
           <div className="vintage-tonearm-track">
             <div className="track-cap-top" />
             <div className="track-line" />
@@ -191,18 +247,15 @@ export default function VintageVinylTheme({
             <div className="tonearm-head" />
           </div>
 
-          {/* Bottom Left decorative details */}
           <div className="dial-bottom-left-group">
             <span className="dial-btn-circle" />
             <span className="dial-btn-circle" />
             <span className="dial-btn-pill" />
           </div>
 
-          {/* Retro Script/Brand text */}
           <div className="vintage-brand" data-tauri-drag-region>Vinilo</div>
         </div>
 
-        {/* Now playing typography & labels */}
         <div className="vintage-now-playing" onMouseDown={(e) => e.stopPropagation()}>
           <h1 className="vintage-title" title={currentTrack.title}>
             {currentTrack.title || "No Track Loaded"}
@@ -212,7 +265,6 @@ export default function VintageVinylTheme({
           </p>
         </div>
 
-        {/* Progress seek area with vertical caps */}
         <div className="vintage-progress-container" onMouseDown={(e) => { e.stopPropagation(); handleProgressMouseDown(e); }}>
           <div className="progress-line-wrapper">
             <div className="progress-cap-left" />
@@ -228,49 +280,26 @@ export default function VintageVinylTheme({
           </div>
         </div>
 
-        {/* Playback Controls & Volume Row grouped together */}
         <div className="vintage-controls-group" onMouseDown={(e) => e.stopPropagation()}>
-          {/* Playback Controls */}
           <div className="vintage-controls">
             <button className="vintage-btn btn-prev" onClick={onPrev} title="Previous">
-              <svg viewBox="0 0 24 24">
-                <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" fill="currentColor"/>
-              </svg>
+              <PrevIcon />
             </button>
             <button className="vintage-btn btn-play" onClick={onTogglePlay} title={isPlaying ? "Pause" : "Play"}>
-              {isPlaying ? (
-                <svg viewBox="0 0 24 24">
-                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" fill="currentColor"/>
-                </svg>
-              )}
+              {isPlaying ? <PauseIcon /> : <PlayIcon />}
             </button>
             <button className="vintage-btn btn-next" onClick={onNext} title="Next">
-              <svg viewBox="0 0 24 24">
-                <path d="M6 18l8.5-6L6 6zm9-12v12h2V6z" fill="currentColor"/>
-              </svg>
+              <NextIcon />
             </button>
           </div>
 
-          {/* Retro Volume Controls Row */}
           <div className="vintage-volume-row">
             <button 
               className={`vintage-volume-btn ${muted ? 'muted' : ''}`} 
               onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
               title={muted ? "Unmute" : "Mute"}
             >
-              {muted ? (
-                <svg viewBox="0 0 24 24">
-                  <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.03a11.12 11.12 0 0 0 3.73-1.68L19.73 21 21 19.73 12 10.73 4.27 3zM12 4 9.91 6.09 12 8.18V4z" fill="currentColor"/>
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24">
-                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>
-                </svg>
-              )}
+              {muted ? <VolumeMuteIcon /> : <VolumeIcon />}
             </button>
             <div className="vintage-volume-slider-wrapper">
               <input 
@@ -288,7 +317,6 @@ export default function VintageVinylTheme({
           </div>
         </div>
 
-        {/* Monochrome Footer printed label */}
         <div className="vintage-footer">
           Calle Antonino Vera 43, Elda
         </div>
@@ -296,3 +324,5 @@ export default function VintageVinylTheme({
     </div>
   );
 }
+
+

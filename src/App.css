@@ -332,6 +332,7 @@
 
 .settings-theme-row {
   display: flex;
+  flex-wrap: wrap;
   gap: calc(4 / 306 * 100vw);
 }
 

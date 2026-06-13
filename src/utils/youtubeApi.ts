@@ -60,6 +60,25 @@ export async function fetchPlaylistItems(playlistId: string): Promise<YouTubePla
   }
 }
 
+export async function fetchPlaylistTitle(playlistId: string): Promise<string | null> {
+  if (!API_KEY) {
+    console.warn("No YouTube API Key found.");
+    return null;
+  }
+  const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch playlist title");
+    const data = await response.json();
+    if (data.items && data.items.length > 0) {
+      return data.items[0].snippet?.title || null;
+    }
+  } catch (error) {
+    console.error("YouTube API Error fetching playlist title:", error);
+  }
+  return null;
+}
+
 export async function fetchVideoDetails(videoId: string): Promise<YouTubePlaylistItem | null> {
   if (!API_KEY) {
     console.warn("No YouTube API Key found.");
@@ -142,5 +161,3 @@ export function extractYouTubeId(input: string): { type: "video" | "playlist"; i
 
   return null;
 }
-
-

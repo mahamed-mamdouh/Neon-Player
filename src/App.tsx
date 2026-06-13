@@ -5,6 +5,7 @@ import { YouTubeIframe } from "./components/YouTubeIframe";
 import {
   fetchPlaylistItems,
   fetchVideoDetails,
+  fetchPlaylistTitle,
   YouTubePlaylistItem,
   extractYouTubeId,
 } from "./utils/youtubeApi";
@@ -122,6 +123,14 @@ export default function App() {
   ]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // States for YouTube Playlist persistence and refresh features
+  const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistUrl"));
+  const [savedPlaylistId, setSavedPlaylistId] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistId"));
+  const [savedPlaylistTitle, setSavedPlaylistTitle] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistTitle"));
+  const [savedPlaylistLoadedAt, setSavedPlaylistLoadedAt] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistLoadedAt"));
+  const [isRefreshingPlaylist, setIsRefreshingPlaylist] = useState(false);
+  const [playlistStatusMessage, setPlaylistStatusMessage] = useState<string | null>(null);
 
   // Playback state & division
   const [currentMode, setCurrentMode] = useState<"local" | "youtube">(
@@ -594,6 +603,128 @@ export default function App() {
     setErrorMessage(null);
   };
 
+  // Helper functions for playlist persistence and clear features
+  const saveLastYoutubePlaylist = ({ url, playlistId, title }: { url: string; playlistId: string; title: string }) => {
+    const loadedAt = new Date().toISOString();
+    localStorage.setItem("neonPlayer:lastYoutubePlaylistUrl", url);
+    localStorage.setItem("neonPlayer:lastYoutubePlaylistId", playlistId);
+    localStorage.setItem("neonPlayer:lastYoutubePlaylistTitle", title);
+    localStorage.setItem("neonPlayer:lastYoutubePlaylistLoadedAt", loadedAt);
+
+    setSavedPlaylistUrl(url);
+    setSavedPlaylistId(playlistId);
+    setSavedPlaylistTitle(title);
+    setSavedPlaylistLoadedAt(loadedAt);
+  };
+
+  const clearLastYoutubePlaylist = () => {
+    localStorage.removeItem("neonPlayer:lastYoutubePlaylistUrl");
+    localStorage.removeItem("neonPlayer:lastYoutubePlaylistId");
+    localStorage.removeItem("neonPlayer:lastYoutubePlaylistTitle");
+    localStorage.removeItem("neonPlayer:lastYoutubePlaylistLoadedAt");
+
+    setSavedPlaylistUrl(null);
+    setSavedPlaylistId(null);
+    setSavedPlaylistTitle(null);
+    setSavedPlaylistLoadedAt(null);
+    setPlaylistStatusMessage("Saved playlist cleared.");
+    setTimeout(() => setPlaylistStatusMessage(null), 3000);
+  };
+
+  const refreshCurrentYoutubePlaylist = async () => {
+    const activePlaylistId = savedPlaylistId || localStorage.getItem("neonPlayer:lastYoutubePlaylistId");
+    if (!activePlaylistId) {
+      setErrorMessage("No playlist to refresh.");
+      return;
+    }
+
+    setIsRefreshingPlaylist(true);
+    setPlaylistStatusMessage("Refreshing...");
+    setErrorMessage(null);
+
+    try {
+      const items = await fetchPlaylistItems(activePlaylistId);
+      if (!items || items.length === 0) {
+        setErrorMessage("Could not refresh the playlist. It may no longer exist.");
+        setIsRefreshingPlaylist(false);
+        setPlaylistStatusMessage(null);
+        return;
+      }
+
+      // Check current song selection before updating
+      const currentSong = playlist[currentTrackIndex];
+      let newTrackIndex = 0; // Default fallback to first song
+      let keepPlayingState = isPlaying;
+
+      if (currentSong) {
+        const foundIndex = items.findIndex(
+          (item) => item.videoId === currentSong.videoId || item.id === currentSong.id
+        );
+        if (foundIndex !== -1) {
+          newTrackIndex = foundIndex;
+        } else {
+          // If the current song was removed, fall back to first song and do not auto-play
+          keepPlayingState = false;
+        }
+      }
+
+      setPlaylist(items);
+      setCurrentTrackIndex(newTrackIndex);
+      setIsPlaying(keepPlayingState);
+
+      // Fetch latest title just in case it changed
+      const title = await fetchPlaylistTitle(activePlaylistId) || savedPlaylistTitle || "YouTube Playlist";
+      const loadedAt = new Date().toISOString();
+
+      localStorage.setItem("neonPlayer:lastYoutubePlaylistTitle", title);
+      localStorage.setItem("neonPlayer:lastYoutubePlaylistLoadedAt", loadedAt);
+
+      setSavedPlaylistTitle(title);
+      setSavedPlaylistLoadedAt(loadedAt);
+      setPlaylistStatusMessage("Playlist refreshed!");
+      setTimeout(() => setPlaylistStatusMessage(null), 3000);
+    } catch (err) {
+      console.error("Failed to refresh playlist:", err);
+      setErrorMessage("Failed to refresh playlist.");
+    } finally {
+      setIsRefreshingPlaylist(false);
+    }
+  };
+
+  // Auto-load saved playlist on startup
+  useEffect(() => {
+    const autoLoadSavedPlaylist = async () => {
+      const savedId = localStorage.getItem("neonPlayer:lastYoutubePlaylistId");
+      if (!savedId) return;
+
+      setLoading(true);
+      setErrorMessage(null);
+      try {
+        const items = await fetchPlaylistItems(savedId);
+        if (items && items.length > 0) {
+          setPlaylist(items);
+          setCurrentTrackIndex(0);
+          setIsPlaying(false);
+          setPendingAutoPlay(false);
+
+          const savedUrl = localStorage.getItem("neonPlayer:lastYoutubePlaylistUrl");
+          if (savedUrl) {
+            setYoutubeUrl(savedUrl);
+          }
+        } else {
+          setErrorMessage("Saved playlist could not be loaded. It may no longer exist.");
+        }
+      } catch (err) {
+        console.error("Failed to auto-load saved playlist on startup:", err);
+        setErrorMessage("Failed to auto-load saved playlist on startup.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    autoLoadSavedPlaylist();
+  }, []);
+
   const loadYoutubeUrl = async () => {
     if (!youtubeUrl) return;
     setLoading(true);
@@ -620,6 +751,15 @@ export default function App() {
         setPlaylist(items);
         setCurrentTrackIndex(0);
         setIsPlaying(false); // Disables autoplay on launch/load!
+
+        // Save last loaded playlist details
+        const title = await fetchPlaylistTitle(playlistId) || "YouTube Playlist";
+        saveLastYoutubePlaylist({
+          url: youtubeUrl,
+          playlistId,
+          title,
+        });
+        setPlaylistStatusMessage(null);
       } else {
         const id = parsed.id;
         const trackDetails = await fetchVideoDetails(id);
@@ -1073,7 +1213,18 @@ export default function App() {
         {showPlaylistSongs && (
           <div className="playlist-panel">
             <div className="playlist-panel-inner">
-              <div className="settings-label">playlist tracks</div>
+              <div className="playlist-panel-header">
+                <span className="settings-label">playlist tracks</span>
+                {(savedPlaylistId || playlist.length > 0) && (
+                  <button
+                    className="playlist-refresh-btn"
+                    onClick={refreshCurrentYoutubePlaylist}
+                    disabled={isRefreshingPlaylist}
+                  >
+                    {isRefreshingPlaylist ? "refreshing..." : "refresh"}
+                  </button>
+                )}
+              </div>
               {playlist.length === 0 ? (
                 <div
                   className="settings-label"
@@ -1202,6 +1353,45 @@ export default function App() {
                   >
                     {loading ? "loading..." : "play"}
                   </button>
+
+                  {savedPlaylistId && (
+                    <>
+                      <div className="settings-label" style={{ marginTop: "15px" }}>
+                        saved playlist
+                      </div>
+                      <div className="saved-playlist-box">
+                        <div className="saved-playlist-title">
+                          {savedPlaylistTitle || "YouTube Playlist"}
+                        </div>
+                        {savedPlaylistUrl && (
+                          <div className="saved-playlist-meta" title={savedPlaylistUrl}>
+                            url: {savedPlaylistUrl}
+                          </div>
+                        )}
+                        {savedPlaylistLoadedAt && (
+                          <div className="saved-playlist-meta">
+                            loaded: {new Date(savedPlaylistLoadedAt).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="saved-playlist-actions">
+                        <button
+                          className="settings-theme-btn saved-playlist-btn"
+                          onClick={refreshCurrentYoutubePlaylist}
+                          disabled={isRefreshingPlaylist}
+                          style={{ opacity: isRefreshingPlaylist ? 0.5 : 1 }}
+                        >
+                          {isRefreshingPlaylist ? "refreshing..." : "refresh"}
+                        </button>
+                        <button
+                          className="settings-theme-btn saved-playlist-btn btn-clear"
+                          onClick={clearLastYoutubePlaylist}
+                        >
+                          clear
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </>
               ) : (
                 <>
@@ -1230,6 +1420,21 @@ export default function App() {
                     </div>
                   )}
                 </>
+              )}
+
+              {playlistStatusMessage && (
+                <div
+                  style={{
+                    color: "#4effa6",
+                    fontSize: "11px",
+                    marginTop: "10px",
+                    textAlign: "center",
+                    fontFamily: "Rainyhearts",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  {playlistStatusMessage}
+                </div>
               )}
 
               {errorMessage && (

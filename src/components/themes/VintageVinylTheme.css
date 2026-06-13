@@ -680,7 +680,8 @@
   top: calc(85 / 306 * 100vw) !important;
   left: calc(30 / 306 * 100vw) !important;
   width: calc(246 / 306 * 100vw) !important;
-  height: calc(320 / 306 * 100vw) !important;
+  height: auto !important;
+  max-height: min(calc(320 / 306 * 100vw), calc(100vh - (100 / 306 * 100vw))) !important;
   transform: none !important;
 }
 
@@ -795,4 +796,46 @@
   cursor: pointer;
   border: none;
 }
+
+/* Vintage Theme Saved Playlist Overrides */
+.player.theme-vintage .saved-playlist-box {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: calc(2.5 / 306 * 100vw) solid black !important;
+  border-radius: calc(4 / 306 * 100vw) !important;
+  padding: calc(8 / 306 * 100vw) !important;
+  margin-bottom: calc(10 / 306 * 100vw) !important;
+  color: black !important;
+}
+
+.player.theme-vintage .saved-playlist-title {
+  font-size: calc(12 / 306 * 100vw) !important;
+  color: black !important;
+  font-weight: bold !important;
+}
+
+.player.theme-vintage .saved-playlist-meta {
+  font-size: calc(10 / 306 * 100vw) !important;
+  color: #333 !important;
+  opacity: 0.95 !important;
+}
+
+.player.theme-vintage .saved-playlist-actions {
+  display: flex !important;
+  gap: calc(6 / 306 * 100vw) !important;
+  width: 100% !important;
+}
+
+.player.theme-vintage .saved-playlist-btn {
+  flex: 1 !important;
+}
+
+.player.theme-vintage .saved-playlist-btn.btn-clear {
+  border-color: #c9302c !important;
+  color: #c9302c !important;
+}
+
+.player.theme-vintage .saved-playlist-btn.btn-clear:hover {
+  background: rgba(201, 48, 44, 0.1) !important;
+}
+
 

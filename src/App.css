@@ -25,12 +25,12 @@
 }
 
 .nature-theme-container.season-summer {
-  --nature-bg: #c9df9f; /* Vibrant rich warm green */
+  --nature-bg: #d2f09c; /* Vibrant rich warm green (slightly brighter) */
   --nature-dark: #112d16;
   --nature-deep: #08170b;
   --nature-mid: #225a27;
-  --nature-accent: #418f43;
-  --nature-light: #eaf5eb;
+  --nature-accent: #4cb04d; /* More vibrant green */
+  --nature-light: #f0faf2; /* Brighter light color */
 }
 
 .nature-theme-container.season-autumn {
@@ -138,6 +138,24 @@
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   pointer-events: none;
+  transition: filter 1.2s ease-in-out;
+}
+
+/* Seasonal frame saturation & lighting adjustments */
+.season-spring .nature-frame-image {
+  filter: saturate(1.1) brightness(1.02);
+}
+
+.season-summer .nature-frame-image {
+  filter: saturate(1.35) brightness(1.06) contrast(1.02);
+}
+
+.season-autumn .nature-frame-image {
+  filter: sepia(0.25) saturate(1.1) brightness(0.98);
+}
+
+.season-winter .nature-frame-image {
+  filter: saturate(0.65) brightness(0.92) hue-rotate(6deg);
 }
 
 /* ==================================================
@@ -341,11 +359,20 @@
   15% {
     opacity: 0.4;
   }
+  25% {
+    transform: translate(calc(12 / 306 * 100vw), calc(100 / 306 * 100vw)) rotate(50deg);
+  }
+  50% {
+    transform: translate(calc(-8 / 306 * 100vw), calc(200 / 306 * 100vw)) rotate(100deg);
+  }
+  75% {
+    transform: translate(calc(18 / 306 * 100vw), calc(300 / 306 * 100vw)) rotate(150deg);
+  }
   85% {
     opacity: 0.4;
   }
   100% {
-    transform: translate(calc(10 / 306 * 100vw), calc(120 / 306 * 100vw))
+    transform: translate(calc(5 / 306 * 100vw), calc(400 / 306 * 100vw))
       rotate(200deg);
     opacity: 0;
   }
@@ -359,11 +386,20 @@
   15% {
     opacity: 0.35;
   }
+  25% {
+    transform: translate(calc(-12 / 306 * 100vw), calc(95 / 306 * 100vw)) rotate(-45deg);
+  }
+  50% {
+    transform: translate(calc(10 / 306 * 100vw), calc(190 / 306 * 100vw)) rotate(-90deg);
+  }
+  75% {
+    transform: translate(calc(-18 / 306 * 100vw), calc(285 / 306 * 100vw)) rotate(-135deg);
+  }
   85% {
     opacity: 0.35;
   }
   100% {
-    transform: translate(calc(-10 / 306 * 100vw), calc(105 / 306 * 100vw))
+    transform: translate(calc(-5 / 306 * 100vw), calc(380 / 306 * 100vw))
       rotate(-180deg);
     opacity: 0;
   }
@@ -377,11 +413,20 @@
   15% {
     opacity: 0.8;
   }
+  25% {
+    transform: translate(calc(18 / 306 * 100vw), calc(105 / 306 * 100vw)) rotate(45deg);
+  }
+  50% {
+    transform: translate(calc(-15 / 306 * 100vw), calc(210 / 306 * 100vw)) rotate(90deg);
+  }
+  75% {
+    transform: translate(calc(22 / 306 * 100vw), calc(315 / 306 * 100vw)) rotate(135deg);
+  }
   85% {
     opacity: 0.8;
   }
   100% {
-    transform: translate(calc(20 / 306 * 100vw), calc(110 / 306 * 100vw))
+    transform: translate(calc(8 / 306 * 100vw), calc(420 / 306 * 100vw))
       rotate(180deg);
     opacity: 0;
   }
@@ -395,11 +440,20 @@
   15% {
     opacity: 0.7;
   }
+  25% {
+    transform: translate(calc(-22 / 306 * 100vw), calc(92 / 306 * 100vw)) rotate(-30deg);
+  }
+  50% {
+    transform: translate(calc(15 / 306 * 100vw), calc(185 / 306 * 100vw)) rotate(-60deg);
+  }
+  75% {
+    transform: translate(calc(-25 / 306 * 100vw), calc(277 / 306 * 100vw)) rotate(-90deg);
+  }
   85% {
     opacity: 0.7;
   }
   100% {
-    transform: translate(calc(-20 / 306 * 100vw), calc(95 / 306 * 100vw))
+    transform: translate(calc(-12 / 306 * 100vw), calc(370 / 306 * 100vw))
       rotate(-120deg);
     opacity: 0;
   }
@@ -413,11 +467,20 @@
   15% {
     opacity: 0.85;
   }
+  25% {
+    transform: translate(calc(25 / 306 * 100vw), calc(102 / 306 * 100vw)) rotate(35deg);
+  }
+  50% {
+    transform: translate(calc(-20 / 306 * 100vw), calc(205 / 306 * 100vw)) rotate(70deg);
+  }
+  75% {
+    transform: translate(calc(28 / 306 * 100vw), calc(307 / 306 * 100vw)) rotate(105deg);
+  }
   85% {
     opacity: 0.85;
   }
   100% {
-    transform: translate(calc(15 / 306 * 100vw), calc(120 / 306 * 100vw))
+    transform: translate(calc(10 / 306 * 100vw), calc(410 / 306 * 100vw))
       rotate(140deg);
     opacity: 0;
   }
@@ -431,11 +494,20 @@
   15% {
     opacity: 0.75;
   }
+  25% {
+    transform: translate(calc(-18 / 306 * 100vw), calc(97 / 306 * 100vw)) rotate(-37deg);
+  }
+  50% {
+    transform: translate(calc(22 / 306 * 100vw), calc(195 / 306 * 100vw)) rotate(-75deg);
+  }
+  75% {
+    transform: translate(calc(-20 / 306 * 100vw), calc(292 / 306 * 100vw)) rotate(-112deg);
+  }
   85% {
     opacity: 0.75;
   }
   100% {
-    transform: translate(calc(-15 / 306 * 100vw), calc(100 / 306 * 100vw))
+    transform: translate(calc(-10 / 306 * 100vw), calc(390 / 306 * 100vw))
       rotate(-150deg);
     opacity: 0;
   }
@@ -1641,38 +1713,38 @@
 }
 
 /* Base drift animations */
-.garden-particle.drift-a { animation: drift-a 9s linear infinite; }
-.garden-particle.drift-b { animation: drift-b 12s linear infinite; }
-.garden-particle.drift-c { animation: drift-c 10s linear infinite; }
-.garden-particle.drift-d { animation: drift-d 11s linear infinite; }
-.garden-particle.drift-center { animation: drift-center 16s linear infinite; }
-.garden-particle.drift-center-alt { animation: drift-center-alt 18s linear infinite; }
+.garden-particle.drift-a { animation: drift-a 24s linear infinite; }
+.garden-particle.drift-b { animation: drift-b 28s linear infinite; }
+.garden-particle.drift-c { animation: drift-c 26s linear infinite; }
+.garden-particle.drift-d { animation: drift-d 27s linear infinite; }
+.garden-particle.drift-center { animation: drift-center 32s linear infinite; }
+.garden-particle.drift-center-alt { animation: drift-center-alt 34s linear infinite; }
 
 /* Intensity speed overrides */
 .intensity-low .garden-particle {
-  animation-duration: 25s !important;
+  animation-duration: 45s !important;
 }
-.intensity-low .garden-particle.size-s { animation-duration: 20s !important; }
-.intensity-low .garden-particle.size-l { animation-duration: 32s !important; }
+.intensity-low .garden-particle.size-s { animation-duration: 38s !important; }
+.intensity-low .garden-particle.size-l { animation-duration: 52s !important; }
 
 .intensity-high .garden-particle {
-  animation-duration: 8s !important;
+  animation-duration: 18s !important;
 }
-.intensity-high .garden-particle.size-s { animation-duration: 6s !important; }
-.intensity-high .garden-particle.size-l { animation-duration: 11s !important; }
+.intensity-high .garden-particle.size-s { animation-duration: 14s !important; }
+.intensity-high .garden-particle.size-l { animation-duration: 22s !important; }
 
 /* Winter Speed Overrides (calm, desaturated winter) */
 .season-winter.intensity-normal .garden-particle {
-  animation-duration: 22s !important;
-}
-.season-winter.intensity-normal .garden-particle.size-s { animation-duration: 18s !important; }
-.season-winter.intensity-normal .garden-particle.size-l { animation-duration: 28s !important; }
-
-.season-winter.intensity-low .garden-particle {
   animation-duration: 38s !important;
 }
+.season-winter.intensity-normal .garden-particle.size-s { animation-duration: 32s !important; }
+.season-winter.intensity-normal .garden-particle.size-l { animation-duration: 44s !important; }
+
+.season-winter.intensity-low .garden-particle {
+  animation-duration: 60s !important;
+}
 .season-winter.intensity-high .garden-particle {
-  animation-duration: 14s !important;
+  animation-duration: 26s !important;
 }
 
 /* Particle visual children */
@@ -1708,7 +1780,7 @@
 .season-summer .visual-leaf {
   opacity: 0.95;
 }
-.season-summer .visual-summer-firefly {
+.season-summer.firefly-mode .visual-summer-firefly {
   opacity: 0.9;
   animation: firefly-glow-a 4s ease-in-out infinite;
 }

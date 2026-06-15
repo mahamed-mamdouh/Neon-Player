@@ -54,28 +54,176 @@ interface FireflyConfig {
   isHeart?: boolean;
 }
 
-const FIREFLIES: FireflyConfig[] = [
-  { id: 1, left: "15%", top: "20%", size: "m", color: "#ffe46b", driftVariant: "a", glowVariant: "a", delay: "0.2s" },
-  { id: 2, left: "75%", top: "15%", size: "s", color: "#e2ff9e", driftVariant: "b", glowVariant: "b", delay: "1.5s" },
-  { id: 3, left: "30%", top: "45%", size: "l", color: "#ffd885", driftVariant: "c", glowVariant: "c", delay: "0.8s", isHeart: true },
-  { id: 4, left: "85%", top: "50%", size: "m", color: "#ffe46b", driftVariant: "d", glowVariant: "a", delay: "2.1s" },
-  { id: 5, left: "10%", top: "70%", size: "s", color: "#e2ff9e", driftVariant: "a", glowVariant: "b", delay: "0.5s" },
-  { id: 6, left: "60%", top: "80%", size: "l", color: "#ffd885", driftVariant: "b", glowVariant: "c", delay: "3.0s" },
-  { id: 7, left: "45%", top: "25%", size: "m", color: "#ffe46b", driftVariant: "c", glowVariant: "a", delay: "1.1s" },
-  { id: 8, left: "20%", top: "85%", size: "s", color: "#e2ff9e", driftVariant: "d", glowVariant: "b", delay: "2.5s" },
-  { id: 9, left: "70%", top: "65%", size: "m", color: "#ffd885", driftVariant: "a", glowVariant: "c", delay: "0.7s" },
-  { id: 10, left: "50%", top: "55%", size: "l", color: "#ffe46b", driftVariant: "b", glowVariant: "a", delay: "1.9s" },
-  { id: 11, left: "80%", top: "35%", size: "s", color: "#e2ff9e", driftVariant: "c", glowVariant: "b", delay: "2.8s" },
-  { id: 12, left: "35%", top: "75%", size: "m", color: "#ffd885", driftVariant: "d", glowVariant: "c", delay: "1.4s" },
-  { id: 13, left: "90%", top: "25%", size: "l", color: "#ffe46b", driftVariant: "a", glowVariant: "a", delay: "0.4s" },
-  { id: 14, left: "25%", top: "35%", size: "s", color: "#e2ff9e", driftVariant: "b", glowVariant: "b", delay: "2.2s" },
-  { id: 15, left: "65%", top: "40%", size: "m", color: "#ffd885", driftVariant: "c", glowVariant: "c", delay: "1.7s", isHeart: true },
-  { id: 16, left: "55%", top: "10%", size: "s", color: "#ffe46b", driftVariant: "d", glowVariant: "a", delay: "0.9s" },
+interface GardenParticle {
+  id: number;
+  left: number; // percentage
+  top: number;  // percentage
+  size: "s" | "m" | "l";
+  speed: number;
+  delay: number;
+  driftVariant: "a" | "b" | "c" | "d" | "center" | "center-alt";
+}
+
+const PARTICLE_COUNT = 48;
+
+const GENERATED_PARTICLES: GardenParticle[] = Array.from({ length: PARTICLE_COUNT }, (_, idx) => {
+  const id = idx + 1;
+  const left = ((idx * 37) % 90) + 5;
+  const top = ((idx * 23) % 40) - 15;
+  const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
+  const size = sizes[idx % 3];
+  const speed = 1.0 + (idx % 5) * 0.15;
+  const delay = parseFloat(((idx * 0.7) % 8).toFixed(1));
+  
+  const driftVariants: GardenParticle["driftVariant"][] = ["a", "b", "c", "d", "center", "center-alt"];
+  const driftVariant = driftVariants[idx % driftVariants.length];
+  
+  return { id, left, top, size, speed, delay, driftVariant };
+});
+
+const GENERATED_FIREFLIES: FireflyConfig[] = Array.from({ length: 24 }, (_, idx) => {
+  const id = idx + 1;
+  const left = ((idx * 17) % 85) + 8 + "%";
+  const top = ((idx * 29) % 80) + 10 + "%";
+  const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
+  const size = sizes[idx % 3];
+  const colors = ["#ffe46b", "#e2ff9e", "#ffd885"];
+  const color = colors[idx % colors.length];
+  const driftVariants: ("a" | "b" | "c" | "d")[] = ["a", "b", "c", "d"];
+  const driftVariant = driftVariants[idx % 4];
+  const glowVariants: ("a" | "b" | "c")[] = ["a", "b", "c"];
+  const glowVariant = glowVariants[idx % 3];
+  const delay = (idx * 0.4).toFixed(1) + "s";
+  const isHeart = idx % 8 === 0;
+  
+  return { id, left, top, size, color, driftVariant, glowVariant, delay, isHeart };
+});
+
+const getFirefliesCount = (intensity: string, season: string) => {
+  let base = 12;
+  if (intensity === "low") base = 6;
+  if (intensity === "high") base = 24;
+  
+  if (season === "summer") {
+    return Math.round(base * 1.5);
+  }
+  return base;
+};
+
+const getParticlesCount = (intensity: string, season: string) => {
+  let base = 16;
+  if (intensity === "low") base = 8;
+  if (intensity === "high") base = 32;
+  
+  if (season === "summer") {
+    return Math.round(base * 1.5);
+  }
+  return base;
+};
+
+const FLOWER_POSITIONS = [
+  { id: 1, top: "5.5%", left: "5.5%", scale: 1.0, activeInAutumn: true },
+  { id: 2, top: "4%", left: "13%", scale: 0.75, activeInAutumn: false },
+  { id: 3, top: "11%", left: "4.5%", scale: 0.7, activeInAutumn: false },
+  { id: 4, top: "5.5%", right: "5.5%", scale: 1.0, activeInAutumn: true },
+  { id: 5, top: "4%", right: "13%", scale: 0.75, activeInAutumn: false },
+  { id: 6, top: "11%", right: "4.5%", scale: 0.7, activeInAutumn: false },
+  { id: 7, bottom: "5.5%", left: "5.5%", scale: 1.1, activeInAutumn: true },
+  { id: 8, bottom: "4%", left: "14%", scale: 0.8, activeInAutumn: false },
+  { id: 9, bottom: "12%", left: "4.5%", scale: 0.7, activeInAutumn: false },
+  { id: 10, bottom: "5.5%", right: "5.5%", scale: 1.1, activeInAutumn: true },
+  { id: 11, bottom: "4%", right: "14%", scale: 0.8, activeInAutumn: false },
+  { id: 12, bottom: "12%", right: "4.5%", scale: 0.7, activeInAutumn: false },
 ];
 
-const getLeafSrc = (index: number) => {
-  const isHeart = (index * 17 + 5) % 10 === 0;
-  return isHeart ? heartLeaf : leaf;
+const ParticleVisual = ({ particle }: { particle: GardenParticle }) => {
+  return (
+    <>
+      <img
+        src={particle.id % 2 === 0 ? heartLeaf : leaf}
+        className="particle-visual visual-leaf"
+        alt=""
+        draggable={false}
+      />
+      <div className="particle-visual visual-petal">
+        <svg viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+          <rect x="3" y="1" width="2" height="6" fill="#fca1b0" />
+          <rect x="1" y="3" width="6" height="2" fill="#fca1b0" />
+          <rect x="2" y="2" width="4" height="4" fill="#ffb7c5" />
+          <rect x="3" y="3" width="2" height="2" fill="#ffe066" />
+        </svg>
+      </div>
+      <div className="particle-visual visual-autumn-leaf">
+        <img
+          src={particle.id % 2 === 0 ? heartLeaf : leaf}
+          alt=""
+          draggable={false}
+        />
+      </div>
+      <div className="particle-visual visual-snowflake">
+        <svg viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+          <path d="M3 0h2v8H3z" fill="#f0f8ff" />
+          <path d="M0 3h8v2H0z" fill="#f0f8ff" />
+          <path d="M1 1h2v2H1zm4 0h2v2H5zm0 4h2v2H5zm-4 0h2v2H1z" fill="#f0f8ff" />
+        </svg>
+      </div>
+      <div className="particle-visual visual-frost">
+        <svg viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+          <path d="M3 0L5 3L3 6L1 3Z" fill="#e0f2fe" opacity="0.85" />
+        </svg>
+      </div>
+      <div className="particle-visual visual-summer-firefly">
+        <div className="firefly-pixel-body" style={{ backgroundColor: "#ffe46b", boxShadow: "0 0 6px #ffe46b", borderRadius: "50%" }} />
+      </div>
+    </>
+  );
+};
+
+const SeasonalFlowers = ({ season, intensity }: { season: string; intensity: string }) => {
+  return (
+    <div className="seasonal-flowers-layer">
+      {FLOWER_POSITIONS.map((pos) => {
+        let isActive = false;
+        if (season === "spring") {
+          isActive = true;
+        } else if (season === "summer") {
+          isActive = [1, 2, 4, 5, 7, 8, 10, 11].includes(pos.id);
+        } else if (season === "autumn") {
+          isActive = pos.activeInAutumn;
+        }
+        
+        if (intensity === "low" && pos.id % 2 === 0) {
+          isActive = false;
+        }
+        
+        const style: React.CSSProperties = {
+          transform: `scale(${pos.scale})`,
+          animationDelay: `${(pos.id * 0.25).toFixed(2)}s`,
+        };
+        
+        if (pos.top) style.top = pos.top;
+        if (pos.bottom) style.bottom = pos.bottom;
+        if (pos.left) style.left = pos.left;
+        if (pos.right) style.right = pos.right;
+        
+        return (
+          <div
+            key={pos.id}
+            className={`seasonal-flower ${isActive ? "active" : ""}`}
+            style={style}
+          >
+            <svg viewBox="0 0 7 7" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
+              <rect x="2" y="0" width="3" height="2" fill="currentColor" />
+              <rect x="0" y="2" width="2" height="3" fill="currentColor" />
+              <rect x="5" y="2" width="2" height="3" fill="currentColor" />
+              <rect x="2" y="5" width="3" height="2" fill="currentColor" />
+              <rect x="2" y="2" width="3" height="3" fill="#ffe066" />
+            </svg>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 const FireflyIcon = () => (
@@ -1405,7 +1553,7 @@ export default function App() {
 
         {/* Decorative Fireflies Layer */}
         <div className={`nature-fireflies-layer ${fireflyActive ? "is-visible" : ""}`} aria-hidden="true">
-          {FIREFLIES.map((f) => (
+          {GENERATED_FIREFLIES.slice(0, getFirefliesCount(animationIntensity, season)).map((f) => (
             <div
               key={f.id}
               className={`firefly size-${f.size} drift-${f.driftVariant}`}
@@ -1450,39 +1598,53 @@ export default function App() {
             />
           </div>
 
-          {/* Decorative Floating Leaves Layer */}
-          <div className="nature-floating-leaves" aria-hidden="true">
-            <img src={getLeafSrc(1)} className="nature-floating-leaf size-s leaf-a" alt="" draggable={false} />
-            <img src={getLeafSrc(2)} className="nature-floating-leaf size-m leaf-b" alt="" draggable={false} />
-            <img src={getLeafSrc(3)} className="nature-floating-leaf size-l leaf-c" alt="" draggable={false} />
-            <img src={getLeafSrc(4)} className="nature-floating-leaf size-s leaf-d" alt="" draggable={false} />
-            <img src={getLeafSrc(5)} className="nature-floating-leaf size-m leaf-e" alt="" draggable={false} />
-            <img src={getLeafSrc(6)} className="nature-floating-leaf size-s leaf-f" alt="" draggable={false} />
-            <img src={getLeafSrc(7)} className="nature-floating-leaf size-l leaf-g" alt="" draggable={false} />
-            <img src={getLeafSrc(8)} className="nature-floating-leaf size-m leaf-h" alt="" draggable={false} />
-            <img src={getLeafSrc(9)} className="nature-floating-leaf size-s leaf-i" alt="" draggable={false} />
-            <img src={getLeafSrc(10)} className="nature-floating-leaf size-m leaf-j" alt="" draggable={false} />
-            <img src={getLeafSrc(11)} className="nature-floating-leaf size-l leaf-k" alt="" draggable={false} />
-            <img src={getLeafSrc(12)} className="nature-floating-leaf size-s leaf-l" alt="" draggable={false} />
-            <img src={getLeafSrc(13)} className="nature-floating-leaf size-m leaf-m" alt="" draggable={false} />
-            <img src={getLeafSrc(14)} className="nature-floating-leaf size-s leaf-n" alt="" draggable={false} />
-            <img src={getLeafSrc(15)} className="nature-floating-leaf size-s leaf-o" alt="" draggable={false} />
-            <img src={getLeafSrc(16)} className="nature-floating-leaf size-s leaf-p" alt="" draggable={false} />
-            <img src={getLeafSrc(17)} className="nature-floating-leaf size-s leaf-q" alt="" draggable={false} />
-            <img src={getLeafSrc(18)} className="nature-floating-leaf size-s leaf-r" alt="" draggable={false} />
+          {/* Dynamic Living Garden Particles Layer */}
+          <div className="garden-particles-layer" aria-hidden="true">
+            {GENERATED_PARTICLES.map((p, index) => {
+              const isActive = index < getParticlesCount(animationIntensity, season);
+              return (
+                <div
+                  key={p.id}
+                  className={`garden-particle size-${p.size} drift-${p.driftVariant} ${isActive ? "visible" : ""}`}
+                  style={{
+                    left: `${p.left}%`,
+                    top: `${p.top}%`,
+                    animationDelay: `${p.delay}s`,
+                    animationDuration: `${(28 * p.speed).toFixed(1)}s`,
+                  }}
+                >
+                  <ParticleVisual particle={p} />
+                </div>
+              );
+            })}
 
-            {/* Special Spawn of Extra Leaves */}
+            {/* Special Spawn of Extra Particles (Easter Egg) */}
             {extraLeaves && (
-              <>
-                <img src={getLeafSrc(19)} className="nature-floating-leaf size-s leaf-extra-a" alt="" draggable={false} />
-                <img src={getLeafSrc(20)} className="nature-floating-leaf size-m leaf-extra-b" alt="" draggable={false} />
-                <img src={getLeafSrc(21)} className="nature-floating-leaf size-l leaf-extra-c" alt="" draggable={false} />
-                <img src={getLeafSrc(22)} className="nature-floating-leaf size-s leaf-extra-d" alt="" draggable={false} />
-                <img src={getLeafSrc(23)} className="nature-floating-leaf size-m leaf-extra-e" alt="" draggable={false} />
-                <img src={getLeafSrc(24)} className="nature-floating-leaf size-l leaf-extra-f" alt="" draggable={false} />
-              </>
+              <div className="extra-leaves-container">
+                {Array.from({ length: 6 }).map((_, idx) => {
+                  const id = 100 + idx;
+                  const size = idx % 3 === 0 ? "s" : idx % 3 === 1 ? "m" : "l";
+                  const letter = ["a", "b", "c", "d", "e", "f"][idx];
+                  return (
+                    <div
+                      key={id}
+                      className={`garden-particle size-${size} drift-${letter} visible`}
+                      style={{
+                        left: `${(idx * 15) % 80 + 10}%`,
+                        top: "-5%",
+                        animationDelay: "0s",
+                      }}
+                    >
+                      <ParticleVisual particle={{ id, size } as any} />
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
+
+          {/* Seasonal Flowers Layer Overlaid on Botanical Frame */}
+          <SeasonalFlowers season={season} intensity={animationIntensity} />
 
           <NatureHeader
             showPlaylistSongs={showPlaylistSongs}

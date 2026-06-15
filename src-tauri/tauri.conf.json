@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Neon Player",
+  "productName": "Moni's Garden",
   "version": "2.1.1",
-  "identifier": "com.hamoe.neonplayer",
+  "identifier": "com.hamoe.monisgarden",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Neon Player",
+        "title": "Moni's Garden",
         "width": 415,
         "height": 674,
         "decorations": false,

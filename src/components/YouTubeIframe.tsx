@@ -36,10 +36,60 @@ export function YouTubeIframe({
   const prevIsPlayingRef = useRef(isPlaying);
   const [playerReady, setPlayerReady] = useState(false);
 
-  // Reset playerReady state when videoId changes
+  // Handle videoId change: load new video in existing player instance
   useEffect(() => {
-    setPlayerReady(false);
-  }, [videoId]);
+    if (!playerReady || !playerRef.current || !videoId) return;
+    try {
+      const shouldPlay = isPlaying || wasPlaying || autoPlayOnReady;
+      if (shouldPlay) {
+        playerRef.current.loadVideoById({
+          videoId: videoId,
+          startSeconds: 0
+        });
+        // Force play request to guarantee play state propagation
+        setTimeout(() => {
+          if (playerRef.current && isPlaying) {
+            try {
+              playerRef.current.playVideo();
+            } catch (e) {
+              console.warn("Deferred play failed:", e);
+            }
+          }
+        }, 150);
+      } else {
+        playerRef.current.cueVideoById({
+          videoId: videoId,
+          startSeconds: 0
+        });
+      }
+
+      // Re-apply volume and mute state to the player instance
+      try {
+        if (muted) {
+          playerRef.current.mute();
+        } else {
+          playerRef.current.unMute();
+          playerRef.current.setVolume(volume * 100);
+        }
+      } catch (err) {
+        console.warn("Failed to apply volume on video update:", err);
+      }
+
+      // Update duration after cued/loaded metadata
+      setTimeout(() => {
+        if (playerRef.current) {
+          try {
+            const d = playerRef.current.getDuration();
+            if (d) onReady(d);
+          } catch (err) {
+            console.warn("Failed to get video duration on update:", err);
+          }
+        }
+      }, 500);
+    } catch (e) {
+      console.warn("Failed to update video ID in existing iframe:", e);
+    }
+  }, [videoId, playerReady]);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -62,19 +112,13 @@ export function YouTubeIframe({
   // Handle play/pause commands based on isPlaying state
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
-    if (isPlaying && videoId) {
-      const t = setTimeout(() => {
-        if (playerReady && playerRef.current && isPlaying && videoId) {
-          try {
-            playerRef.current.playVideo();
-          } catch (e) {
-            console.warn("Failed to play video:", e);
-          }
-        }
-      }, 50);
-      prevIsPlayingRef.current = isPlaying;
-      return () => clearTimeout(t);
-    } else if (!isPlaying && prevIsPlayingRef.current) {
+    if (isPlaying) {
+      try {
+        playerRef.current.playVideo();
+      } catch (e) {
+        console.warn("Failed to play video:", e);
+      }
+    } else {
       try {
         playerRef.current.pauseVideo();
       } catch (e) {
@@ -82,25 +126,7 @@ export function YouTubeIframe({
       }
     }
     prevIsPlayingRef.current = isPlaying;
-  }, [isPlaying, videoId, playerReady]);
-
-  // Autoplay/cue on track change if wasPlaying or autoPlayOnReady is true
-  useEffect(() => {
-    if (!playerReady || !playerRef.current) return;
-    const shouldPlay = wasPlaying || autoPlayOnReady;
-    if (videoId && shouldPlay) {
-      const t = setTimeout(() => {
-        if (playerReady && playerRef.current && (wasPlaying || autoPlayOnReady)) {
-          try {
-            playerRef.current.playVideo();
-          } catch (e) {
-            console.warn("Failed to autoplay video on track change:", e);
-          }
-        }
-      }, 50);
-      return () => clearTimeout(t);
-    }
-  }, [videoId, wasPlaying, autoPlayOnReady, playerReady]);
+  }, [isPlaying, playerReady]);
 
   useEffect(() => {
     if (!playerReady || !playerRef.current) return;
@@ -183,17 +209,34 @@ export function YouTubeIframe({
     }
   };
 
+  const handlePlay = () => {
+    if (playerRef.current) {
+      try {
+        const d = playerRef.current.getDuration();
+        if (d) onReady(d);
+      } catch (err) {
+        console.warn("Failed to get duration on play:", err);
+      }
+    }
+    if (onPlay) onPlay();
+  };
+
+  const handlePause = () => {
+    if (!isPlaying) {
+      if (onPause) onPause();
+    }
+  };
+
   const activeVideoId = videoId || "3nQNiWdeH2Q";
 
   return (
     <div className="hidden absolute opacity-0 pointer-events-none" style={{ display: 'none' }}>
       <YouTube
-        key={activeVideoId}
         videoId={activeVideoId}
         opts={{ height: "0", width: "0", playerVars: { autoplay: 0, controls: 0 } }}
         onReady={handlePlayerReady}
-        onPlay={onPlay}
-        onPause={onPause}
+        onPlay={handlePlay}
+        onPause={handlePause}
         onEnd={onEnd}
       />
     </div>

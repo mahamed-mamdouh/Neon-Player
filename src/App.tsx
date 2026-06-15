@@ -40,6 +40,7 @@ import volumeBarFull from "./assets/nature/volume_bar_full.png";
 import leaf from "./assets/nature/leaf.png";
 import heartLeaf from "./assets/nature/heart_leaf.png";
 import frameNoBackground from "./assets/nature/frame_no_backround.png";
+import logoImg from "./assets/logo.png";
 
 // Firefly Config
 interface FireflyConfig {
@@ -57,7 +58,7 @@ interface FireflyConfig {
 interface GardenParticle {
   id: number;
   left: number; // percentage
-  top: number;  // percentage
+  top: number; // percentage
   size: "s" | "m" | "l";
   speed: number;
   delay: number;
@@ -66,44 +67,67 @@ interface GardenParticle {
 
 const PARTICLE_COUNT = 48;
 
-const GENERATED_PARTICLES: GardenParticle[] = Array.from({ length: PARTICLE_COUNT }, (_, idx) => {
-  const id = idx + 1;
-  const left = ((idx * 37) % 90) + 5;
-  const top = ((idx * 23) % 40) - 15;
-  const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
-  const size = sizes[idx % 3];
-  const speed = 1.0 + (idx % 5) * 0.15;
-  const delay = parseFloat(((idx * 0.7) % 8).toFixed(1));
-  
-  const driftVariants: GardenParticle["driftVariant"][] = ["a", "b", "c", "d", "center", "center-alt"];
-  const driftVariant = driftVariants[idx % driftVariants.length];
-  
-  return { id, left, top, size, speed, delay, driftVariant };
-});
+const GENERATED_PARTICLES: GardenParticle[] = Array.from(
+  { length: PARTICLE_COUNT },
+  (_, idx) => {
+    const id = idx + 1;
+    const left = ((idx * 37) % 90) + 5;
+    const top = ((idx * 23) % 40) - 15;
+    const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
+    const size = sizes[idx % 3];
+    const speed = 1.0 + (idx % 5) * 0.15;
+    const delay = parseFloat(((idx * 0.7) % 8).toFixed(1));
 
-const GENERATED_FIREFLIES: FireflyConfig[] = Array.from({ length: 24 }, (_, idx) => {
-  const id = idx + 1;
-  const left = ((idx * 17) % 85) + 8 + "%";
-  const top = ((idx * 29) % 80) + 10 + "%";
-  const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
-  const size = sizes[idx % 3];
-  const colors = ["#ffe46b", "#e2ff9e", "#ffd885"];
-  const color = colors[idx % colors.length];
-  const driftVariants: ("a" | "b" | "c" | "d")[] = ["a", "b", "c", "d"];
-  const driftVariant = driftVariants[idx % 4];
-  const glowVariants: ("a" | "b" | "c")[] = ["a", "b", "c"];
-  const glowVariant = glowVariants[idx % 3];
-  const delay = (idx * 0.4).toFixed(1) + "s";
-  const isHeart = idx % 8 === 0;
-  
-  return { id, left, top, size, color, driftVariant, glowVariant, delay, isHeart };
-});
+    const driftVariants: GardenParticle["driftVariant"][] = [
+      "a",
+      "b",
+      "c",
+      "d",
+      "center",
+      "center-alt",
+    ];
+    const driftVariant = driftVariants[idx % driftVariants.length];
+
+    return { id, left, top, size, speed, delay, driftVariant };
+  },
+);
+
+const GENERATED_FIREFLIES: FireflyConfig[] = Array.from(
+  { length: 24 },
+  (_, idx) => {
+    const id = idx + 1;
+    const left = ((idx * 17) % 85) + 8 + "%";
+    const top = ((idx * 29) % 80) + 10 + "%";
+    const sizes: ("s" | "m" | "l")[] = ["s", "m", "l"];
+    const size = sizes[idx % 3];
+    const colors = ["#ffe46b", "#e2ff9e", "#ffd885"];
+    const color = colors[idx % colors.length];
+    const driftVariants: ("a" | "b" | "c" | "d")[] = ["a", "b", "c", "d"];
+    const driftVariant = driftVariants[idx % 4];
+    const glowVariants: ("a" | "b" | "c")[] = ["a", "b", "c"];
+    const glowVariant = glowVariants[idx % 3];
+    const delay = (idx * 0.4).toFixed(1) + "s";
+    const isHeart = idx % 8 === 0;
+
+    return {
+      id,
+      left,
+      top,
+      size,
+      color,
+      driftVariant,
+      glowVariant,
+      delay,
+      isHeart,
+    };
+  },
+);
 
 const getFirefliesCount = (intensity: string, season: string) => {
   let base = 12;
   if (intensity === "low") base = 6;
   if (intensity === "high") base = 24;
-  
+
   if (season === "summer") {
     return Math.round(base * 1.5);
   }
@@ -114,12 +138,174 @@ const getParticlesCount = (intensity: string, season: string) => {
   let base = 16;
   if (intensity === "low") base = 8;
   if (intensity === "high") base = 32;
-  
+
   if (season === "summer") {
     return Math.round(base * 1.5);
   }
   return base;
 };
+
+const MONI_NOTES = [
+  "Moni, I hope today is a good day.",
+  "The flowers seem happy to see you.",
+  "The garden feels brighter today.",
+  "You are loved more than you know.",
+  "A little reminder to smile.",
+];
+
+const GARDEN_QUOTES = [
+  "A butterfly passed through the garden.",
+  "The forest is listening.",
+  "A gentle breeze moved the leaves.",
+  "The flowers are dancing today.",
+  "The fireflies are awake.",
+];
+
+const SPECIAL_EVENTS = [
+  { text: "The garden wanted to thank you for visiting.", type: "thank" },
+  { text: "Some flowers bloomed just for you.", type: "blooms" },
+  { text: "A secret breeze passed through.", type: "breeze" },
+];
+
+const DoubleHeartLeafSVG = () => (
+  <svg
+    viewBox="0 0 16 16"
+    width="100%"
+    height="100%"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ display: "block" }}
+  >
+    <g transform="translate(1, 2) rotate(-15)">
+      <path
+        d="M4 12C4 12 0 8 0 4.5C0 1.5 2 0 4 3C6 0 8 1.5 8 4.5C8 8 4 12 4 12Z"
+        fill="var(--heart-leaf-fill, #e884a4)"
+      />
+      <path
+        d="M4 11C4 11 1 7.5 1 4.5"
+        stroke="var(--heart-leaf-stroke, #c25375)"
+        strokeWidth="0.5"
+      />
+    </g>
+    <g transform="translate(8, 6) scale(0.7) rotate(25)">
+      <path
+        d="M4 12C4 12 0 8 0 4.5C0 1.5 2 0 4 3C6 0 8 1.5 8 4.5C8 8 4 12 4 12Z"
+        fill="var(--heart-leaf-fill-light, #ffb3c6)"
+      />
+    </g>
+  </svg>
+);
+
+const PixelHeartLeafSVG = () => (
+  <svg
+    viewBox="0 0 8 8"
+    width="100%"
+    height="100%"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ display: "block" }}
+  >
+    <path
+      d="M3 1h2v1H3zm-2 1h6v1H1zm-1 1h8v1H0zm1 1h6v1H1zm1 1h4v1H2zm1 1h2v1H3z"
+      fill="var(--heart-leaf-fill, #d65a7f)"
+    />
+    <rect
+      x="3"
+      y="3"
+      width="2"
+      height="2"
+      fill="var(--heart-leaf-stroke, #a83254)"
+    />
+  </svg>
+);
+
+const ButterflySVG = ({ isLanded }: { isLanded: boolean }) => (
+  <svg viewBox="0 0 10 10" width="16" height="16" style={{ display: "block" }}>
+    <g
+      style={{
+        transformOrigin: "5px 5px",
+        animation: isLanded ? "none" : "wingFlap 0.25s infinite ease-in-out",
+      }}
+    >
+      <rect x="1" y="2" width="4" height="3" fill="#ff9f43" />
+      <rect x="2" y="5" width="3" height="3" fill="#ffb74d" />
+      <rect x="2" y="3" width="1" height="1" fill="#fff" />
+    </g>
+    <g
+      style={{
+        transformOrigin: "5px 5px",
+        animation: isLanded ? "none" : "wingFlap 0.25s infinite ease-in-out",
+        animationDelay: "0.08s",
+      }}
+    >
+      <rect x="5" y="2" width="4" height="3" fill="#ff9f43" />
+      <rect x="5" y="5" width="3" height="3" fill="#ffb74d" />
+      <rect x="7" y="3" width="1" height="1" fill="#fff" />
+    </g>
+    <rect x="4" y="1" width="2" height="8" fill="#5c3d24" />
+    <rect x="4" y="2" width="2" height="2" fill="#2e1a0c" />
+  </svg>
+);
+
+const BirdSVG = ({ isLanded }: { isLanded: boolean }) => (
+  <svg viewBox="0 0 10 10" width="16" height="16" style={{ display: "block" }}>
+    <rect x="2" y="3" width="6" height="5" fill="#54a0ff" />
+    <rect x="5" y="1" width="4" height="4" fill="#54a0ff" />
+    <rect x="7" y="2" width="1" height="1" fill="#000" />
+    <rect x="9" y="2" width="1" height="1" fill="#ff9f43" />
+    <rect
+      x="3"
+      y="4"
+      width="3"
+      height="3"
+      fill="#2e86de"
+      style={{
+        transformOrigin: "3px 4px",
+        animation: isLanded
+          ? "none"
+          : "birdWingFlap 0.15s infinite ease-in-out",
+      }}
+    />
+    <rect x="1" y="5" width="1" height="2" fill="#2e86de" />
+  </svg>
+);
+
+const LadybugSVG = () => (
+  <svg viewBox="0 0 8 8" width="12" height="12" style={{ display: "block" }}>
+    <rect x="3" y="1" width="2" height="1" fill="#222" />
+    <rect x="1" y="2" width="6" height="5" fill="#ee5253" />
+    <rect x="2" y="1" width="4" height="1" fill="#222" />
+    <rect x="3" y="2" width="2" height="5" fill="#222" />
+    <rect x="2" y="3" width="1" height="1" fill="#222" />
+    <rect x="5" y="3" width="1" height="1" fill="#222" />
+    <rect x="2" y="5" width="1" height="1" fill="#222" />
+    <rect x="5" y="5" width="1" height="1" fill="#222" />
+    <rect x="0" y="3" width="1" height="1" fill="#222" />
+    <rect x="0" y="5" width="1" height="1" fill="#222" />
+    <rect x="7" y="3" width="1" height="1" fill="#222" />
+    <rect x="7" y="5" width="1" height="1" fill="#222" />
+  </svg>
+);
+
+const BeeSVG = ({ isLanded }: { isLanded: boolean }) => (
+  <svg viewBox="0 0 10 10" width="14" height="14" style={{ display: "block" }}>
+    <g
+      style={{
+        transformOrigin: "5px 4px",
+        animation: isLanded ? "none" : "wingFlap 0.1s infinite linear",
+      }}
+    >
+      <rect x="2" y="1" width="3" height="3" fill="#fff" opacity="0.7" />
+      <rect x="5" y="1" width="3" height="3" fill="#fff" opacity="0.7" />
+    </g>
+    <rect x="2" y="4" width="6" height="4" fill="#feca57" />
+    <rect x="3" y="4" width="1" height="4" fill="#2d3436" />
+    <rect x="5" y="4" width="1" height="4" fill="#2d3436" />
+    <rect x="7" y="4" width="1" height="4" fill="#2d3436" />
+    <rect x="8" y="5" width="1" height="1" fill="#2d3436" />
+    <rect x="1" y="5" width="1" height="1" fill="#2d3436" />
+  </svg>
+);
 
 const FLOWER_POSITIONS = [
   { id: 1, top: "5.5%", left: "5.5%", scale: 1.0, activeInAutumn: true },
@@ -139,14 +325,26 @@ const FLOWER_POSITIONS = [
 const ParticleVisual = ({ particle }: { particle: GardenParticle }) => {
   return (
     <>
-      <img
-        src={particle.id % 2 === 0 ? heartLeaf : leaf}
-        className="particle-visual visual-leaf"
-        alt=""
-        draggable={false}
-      />
+      <div className="particle-visual visual-leaf">
+        {particle.id % 4 === 0 ? (
+          <DoubleHeartLeafSVG />
+        ) : particle.id % 4 === 2 ? (
+          <PixelHeartLeafSVG />
+        ) : (
+          <img
+            src={particle.id % 2 === 0 ? heartLeaf : leaf}
+            alt=""
+            draggable={false}
+          />
+        )}
+      </div>
       <div className="particle-visual visual-petal">
-        <svg viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+        <svg
+          viewBox="0 0 8 8"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: "100%", height: "100%" }}
+        >
           <rect x="3" y="1" width="2" height="6" fill="#fca1b0" />
           <rect x="1" y="3" width="6" height="2" fill="#fca1b0" />
           <rect x="2" y="2" width="4" height="4" fill="#ffb7c5" />
@@ -154,65 +352,108 @@ const ParticleVisual = ({ particle }: { particle: GardenParticle }) => {
         </svg>
       </div>
       <div className="particle-visual visual-autumn-leaf">
-        <img
-          src={particle.id % 2 === 0 ? heartLeaf : leaf}
-          alt=""
-          draggable={false}
-        />
+        {particle.id % 4 === 0 ? (
+          <DoubleHeartLeafSVG />
+        ) : particle.id % 4 === 2 ? (
+          <PixelHeartLeafSVG />
+        ) : (
+          <img
+            src={particle.id % 2 === 0 ? heartLeaf : leaf}
+            alt=""
+            draggable={false}
+          />
+        )}
       </div>
       <div className="particle-visual visual-snowflake">
-        <svg viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+        <svg
+          viewBox="0 0 8 8"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: "100%", height: "100%" }}
+        >
           <path d="M3 0h2v8H3z" fill="#f0f8ff" />
           <path d="M0 3h8v2H0z" fill="#f0f8ff" />
-          <path d="M1 1h2v2H1zm4 0h2v2H5zm0 4h2v2H5zm-4 0h2v2H1z" fill="#f0f8ff" />
+          <path
+            d="M1 1h2v2H1zm4 0h2v2H5zm0 4h2v2H5zm-4 0h2v2H1z"
+            fill="#f0f8ff"
+          />
         </svg>
       </div>
       <div className="particle-visual visual-frost">
-        <svg viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+        <svg
+          viewBox="0 0 6 6"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ width: "100%", height: "100%" }}
+        >
           <path d="M3 0L5 3L3 6L1 3Z" fill="#e0f2fe" opacity="0.85" />
         </svg>
       </div>
       <div className="particle-visual visual-summer-firefly">
-        <div className="firefly-pixel-body" style={{ backgroundColor: "#ffe46b", boxShadow: "0 0 6px #ffe46b", borderRadius: "50%" }} />
+        <div
+          className="firefly-pixel-body"
+          style={{
+            backgroundColor: "#ffe46b",
+            boxShadow: "0 0 6px #ffe46b",
+            borderRadius: "50%",
+          }}
+        />
       </div>
     </>
   );
 };
 
-const SeasonalFlowers = ({ season, intensity }: { season: string; intensity: string }) => {
+const SeasonalFlowers = ({
+  season,
+  intensity,
+  specialBloomsActive,
+}: {
+  season: string;
+  intensity: string;
+  specialBloomsActive: boolean;
+}) => {
   return (
     <div className="seasonal-flowers-layer">
       {FLOWER_POSITIONS.map((pos) => {
         let isActive = false;
-        if (season === "spring") {
+        if (specialBloomsActive) {
+          isActive = true;
+        } else if (season === "spring") {
           isActive = true;
         } else if (season === "summer") {
           isActive = [1, 2, 4, 5, 7, 8, 10, 11].includes(pos.id);
         } else if (season === "autumn") {
           isActive = pos.activeInAutumn;
         }
-        
-        if (intensity === "low" && pos.id % 2 === 0) {
+
+        if (!specialBloomsActive && intensity === "low" && pos.id % 2 === 0) {
           isActive = false;
         }
-        
+
         const style: React.CSSProperties = {
           transform: `scale(${pos.scale})`,
           animationDelay: `${(pos.id * 0.25).toFixed(2)}s`,
         };
-        
+
         if (pos.top) style.top = pos.top;
         if (pos.bottom) style.bottom = pos.bottom;
         if (pos.left) style.left = pos.left;
         if (pos.right) style.right = pos.right;
-        
+
         return (
           <div
             key={pos.id}
             className={`seasonal-flower ${isActive ? "active" : ""}`}
             style={style}
           >
-            <svg viewBox="0 0 7 7" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block" }}>
+            <svg
+              viewBox="0 0 7 7"
+              width="16"
+              height="16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ display: "block" }}
+            >
               <rect x="2" y="0" width="3" height="2" fill="currentColor" />
               <rect x="0" y="2" width="2" height="3" fill="currentColor" />
               <rect x="5" y="2" width="2" height="3" fill="currentColor" />
@@ -270,7 +511,13 @@ const NatureHeader = ({
     <div className="nature-top-bar" data-tauri-drag-region>
       <div
         className="nature-logo"
-        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+        style={{
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+          display: "flex",
+          alignItems: "center",
+          gap: "calc(4 / 306 * 100vw)",
+        }}
         onClick={(e) => {
           e.stopPropagation();
           onLogoClick();
@@ -281,7 +528,10 @@ const NatureHeader = ({
         Moni's Garden
       </div>
 
-      <div className="nature-top-bar-center" onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className="nature-top-bar-center"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <button
           className={`nature-image-button nature-firefly-button ${
             fireflyActive ? "is-active" : ""
@@ -390,7 +640,14 @@ const CircularAlbumArt = ({ thumbnailUrl }: { thumbnailUrl?: string }) => {
               draggable={false}
             />
           ) : (
-            <div className="nature-fallback-art" />
+            <div className="nature-fallback-art" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#d4dfc7" }}>
+              <img
+                src={logoImg}
+                alt="Moni's Garden logo"
+                draggable={false}
+                style={{ width: "75%", height: "75%", objectFit: "contain" }}
+              />
+            </div>
           )}
         </div>
 
@@ -465,7 +722,10 @@ const ProgressSection = ({
   };
 
   return (
-    <div className="nature-progress-section" onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      className="nature-progress-section"
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <div
         className="nature-image-bar nature-length-bar"
         onMouseDown={handleProgressMouseDown}
@@ -481,9 +741,10 @@ const ProgressSection = ({
           className="nature-bar-fill-window"
           style={{
             left: 0,
-            width: progress > 0
-              ? `calc(var(--nature-progress-cap-left) + ${progress} * (100% - var(--nature-progress-cap-left) - var(--nature-progress-cap-right)))`
-              : "0px",
+            width:
+              progress > 0
+                ? `calc(var(--nature-progress-cap-left) + ${progress} * (100% - var(--nature-progress-cap-left) - var(--nature-progress-cap-right)))`
+                : "0px",
           }}
         >
           <img
@@ -692,9 +953,10 @@ const VolumeControl = ({
           className="nature-bar-fill-window"
           style={{
             left: 0,
-            width: volumeVal > 0
-              ? `calc(var(--nature-volume-cap-left) + ${volumeVal} * (100% - var(--nature-volume-cap-left) - var(--nature-volume-cap-right)))`
-              : "0px",
+            width:
+              volumeVal > 0
+                ? `calc(var(--nature-volume-cap-left) + ${volumeVal} * (100% - var(--nature-volume-cap-left) - var(--nature-volume-cap-right)))`
+                : "0px",
           }}
         >
           <img
@@ -787,12 +1049,22 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   // States for YouTube Playlist persistence and refresh features
-  const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistUrl"));
-  const [savedPlaylistId, setSavedPlaylistId] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistId"));
-  const [savedPlaylistTitle, setSavedPlaylistTitle] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistTitle"));
-  const [savedPlaylistLoadedAt, setSavedPlaylistLoadedAt] = useState<string | null>(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistLoadedAt"));
+  const [savedPlaylistUrl, setSavedPlaylistUrl] = useState<string | null>(() =>
+    localStorage.getItem("neonPlayer:lastYoutubePlaylistUrl"),
+  );
+  const [savedPlaylistId, setSavedPlaylistId] = useState<string | null>(() =>
+    localStorage.getItem("neonPlayer:lastYoutubePlaylistId"),
+  );
+  const [savedPlaylistTitle, setSavedPlaylistTitle] = useState<string | null>(
+    () => localStorage.getItem("neonPlayer:lastYoutubePlaylistTitle"),
+  );
+  const [savedPlaylistLoadedAt, setSavedPlaylistLoadedAt] = useState<
+    string | null
+  >(() => localStorage.getItem("neonPlayer:lastYoutubePlaylistLoadedAt"));
   const [isRefreshingPlaylist, setIsRefreshingPlaylist] = useState(false);
-  const [playlistStatusMessage, setPlaylistStatusMessage] = useState<string | null>(null);
+  const [playlistStatusMessage, setPlaylistStatusMessage] = useState<
+    string | null
+  >(null);
 
   // Playback state & division
   const [currentMode, setCurrentMode] = useState<"local" | "youtube">(
@@ -855,11 +1127,297 @@ export default function App() {
 
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [aboutFadeOut, setAboutFadeOut] = useState(false);
-  const [settingsPanelContainer, setSettingsPanelContainer] = useState<HTMLDivElement | null>(null);
+  const [settingsPanelContainer, setSettingsPanelContainer] =
+    useState<HTMLDivElement | null>(null);
 
   const [fireflyActive, setFireflyActive] = useState(false);
-  const [season, setSeason] = useState<string>(() => localStorage.getItem("monis_garden_season") || "spring");
-  const [animationIntensity, setAnimationIntensity] = useState<string>(() => localStorage.getItem("monis_garden_animation_intensity") || "normal");
+  const [season, setSeason] = useState<string>(
+    () => localStorage.getItem("monis_garden_season") || "spring",
+  );
+  const [animationIntensity, setAnimationIntensity] = useState<string>(
+    () => localStorage.getItem("monis_garden_animation_intensity") || "normal",
+  );
+
+  // Personalization settings and state
+  const [quotesEnabled, setQuotesEnabled] = useState(() => {
+    return localStorage.getItem("monis_garden_magic_quotes") !== "false";
+  });
+  const [moniNotesEnabled, setMoniNotesEnabled] = useState(() => {
+    return localStorage.getItem("monis_garden_moni_notes") !== "false";
+  });
+  const [companionsEnabled, setCompanionsEnabled] = useState(() => {
+    return localStorage.getItem("monis_garden_companions") !== "false";
+  });
+  const [specialEventsEnabled, setSpecialEventsEnabled] = useState(() => {
+    return localStorage.getItem("monis_garden_special_events") !== "false";
+  });
+
+  const [ambientMessage, setAmbientMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<"note" | "quote" | null>(null);
+
+  interface CompanionState {
+    type: "butterfly" | "bird" | "ladybug" | "bee";
+    x: number;
+    y: number;
+    rotation: number;
+    isLanded: boolean;
+    opacity: number;
+  }
+  const [companion, setCompanion] = useState<CompanionState | null>(null);
+
+  const [visitCount, setVisitCount] = useState(0);
+
+  // Hidden achievements trigger tracking
+  const seasonClicksRef = useRef(0);
+  const fireflyClicksRef = useRef(0);
+  const songSkipsRef = useRef(0);
+
+  const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>(
+    () => {
+      try {
+        const saved = localStorage.getItem(
+          "monis_garden_unlocked_achievements",
+        );
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    },
+  );
+
+  interface ActiveAchievement {
+    title: string;
+    description: string;
+  }
+  const [activeAchievement, setActiveAchievement] =
+    useState<ActiveAchievement | null>(null);
+
+  // Special events states
+  const [specialEventText, setSpecialEventText] = useState<string | null>(null);
+  const [specialBreezeActive, setSpecialBreezeActive] = useState(false);
+  const [specialBloomsActive, setSpecialBloomsActive] = useState(false);
+  const [specialThankGlowActive, setSpecialThankGlowActive] = useState(false);
+
+  const companionTimeoutsRef = useRef<number[]>([]);
+
+  const unlockAchievement = (title: string, description: string) => {
+    setUnlockedAchievements((prev) => {
+      if (prev.includes(title)) return prev;
+      const next = [...prev, title];
+      localStorage.setItem(
+        "monis_garden_unlocked_achievements",
+        JSON.stringify(next),
+      );
+
+      setActiveAchievement({ title, description });
+      setTimeout(() => {
+        setActiveAchievement(null);
+      }, 4500);
+
+      return next;
+    });
+  };
+
+  // Scheduler for companions, ambient messages, and special events
+  useEffect(() => {
+    const clearCompanionTimeouts = () => {
+      companionTimeoutsRef.current.forEach((id) => clearTimeout(id));
+      companionTimeoutsRef.current = [];
+    };
+
+    // 1. Ambient Message Scheduler (Runs every 45s, chooses note or quote)
+    const messageInterval = setInterval(() => {
+      if (ambientMessage) return; // Wait if already showing
+
+      const roll = Math.random();
+      if (moniNotesEnabled && roll < 0.08) {
+        const msg = MONI_NOTES[Math.floor(Math.random() * MONI_NOTES.length)];
+        setAmbientMessage(msg);
+        setMessageType("note");
+        setTimeout(() => {
+          setAmbientMessage(null);
+          setMessageType(null);
+        }, 8000);
+      } else if (quotesEnabled && roll < 0.35) {
+        const msg =
+          GARDEN_QUOTES[Math.floor(Math.random() * GARDEN_QUOTES.length)];
+        setAmbientMessage(msg);
+        setMessageType("quote");
+        setTimeout(() => {
+          setAmbientMessage(null);
+          setMessageType(null);
+        }, 8000);
+      }
+    }, 45000);
+
+    // 2. Companion Spawner (Runs every 75s, 35% chance to wander)
+    const companionInterval = setInterval(() => {
+      if (!companionsEnabled || companion) return;
+
+      if (Math.random() < 0.35) {
+        clearCompanionTimeouts();
+
+        const types: ("butterfly" | "bird" | "ladybug" | "bee")[] = [
+          "butterfly",
+          "bird",
+          "ladybug",
+          "bee",
+        ];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const isLeft = Math.random() > 0.5;
+
+        setCompanion({
+          type,
+          x: isLeft ? -10 : 110,
+          y: Math.random() * 60 + 20,
+          rotation: isLeft ? 45 : -45,
+          isLanded: false,
+          opacity: 0,
+        });
+
+        // Step 1: Fly/Crawl on-screen
+        const t1 = window.setTimeout(() => {
+          setCompanion((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  x: isLeft ? 15 : 85,
+                  y: Math.random() * 40 + 25,
+                  rotation: isLeft ? 20 : -20,
+                  opacity: 1,
+                }
+              : null,
+          );
+        }, 200);
+        companionTimeoutsRef.current.push(t1);
+
+        // Step 2: Land briefly
+        const t2 = window.setTimeout(() => {
+          setCompanion((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  x: isLeft ? 7 : 93,
+                  y: 12,
+                  rotation: 0,
+                  isLanded: true,
+                }
+              : null,
+          );
+        }, 3800);
+        companionTimeoutsRef.current.push(t2);
+
+        // Step 3: Wander to another corner
+        const t3 = window.setTimeout(() => {
+          setCompanion((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  x: isLeft ? 88 : 12,
+                  y: 84,
+                  rotation: isLeft ? 135 : -135,
+                  isLanded: false,
+                }
+              : null,
+          );
+        }, 8800);
+        companionTimeoutsRef.current.push(t3);
+
+        // Step 4: Land again
+        const t4 = window.setTimeout(() => {
+          setCompanion((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  x: isLeft ? 93 : 7,
+                  y: 89,
+                  rotation: 0,
+                  isLanded: true,
+                }
+              : null,
+          );
+        }, 12800);
+        companionTimeoutsRef.current.push(t4);
+
+        // Step 5: Leave off-screen
+        const t5 = window.setTimeout(() => {
+          setCompanion((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  x: isLeft ? 110 : -10,
+                  y: Math.random() * 60 + 20,
+                  rotation: isLeft ? 45 : -45,
+                  isLanded: false,
+                }
+              : null,
+          );
+        }, 17800);
+        companionTimeoutsRef.current.push(t5);
+
+        // Step 6: Cleanup
+        const t6 = window.setTimeout(() => {
+          setCompanion(null);
+        }, 21500);
+        companionTimeoutsRef.current.push(t6);
+      }
+    }, 75000);
+
+    // 3. Special Event Spawner (Runs every 150s, 3% chance)
+    const specialEventInterval = setInterval(() => {
+      if (!specialEventsEnabled || specialEventText) return;
+
+      if (Math.random() < 0.03) {
+        const event =
+          SPECIAL_EVENTS[Math.floor(Math.random() * SPECIAL_EVENTS.length)];
+        setSpecialEventText(event.text);
+
+        if (event.type === "breeze") {
+          setSpecialBreezeActive(true);
+        } else if (event.type === "blooms") {
+          setSpecialBloomsActive(true);
+        } else if (event.type === "thank") {
+          setSpecialThankGlowActive(true);
+        }
+
+        setTimeout(() => {
+          setSpecialEventText(null);
+          setSpecialBreezeActive(false);
+          setSpecialBloomsActive(false);
+          setSpecialThankGlowActive(false);
+        }, 10000);
+      }
+    }, 150000);
+
+    return () => {
+      clearInterval(messageInterval);
+      clearInterval(companionInterval);
+      clearInterval(specialEventInterval);
+      clearCompanionTimeouts();
+    };
+  }, [
+    quotesEnabled,
+    moniNotesEnabled,
+    companionsEnabled,
+    specialEventsEnabled,
+    companion,
+    ambientMessage,
+    specialEventText,
+  ]);
+
+  // Load & Increment passive visit count on mount
+  useEffect(() => {
+    const visitsStr = localStorage.getItem("monis_garden_visit_count") || "0";
+    const nextVisits = parseInt(visitsStr, 10) + 1;
+    localStorage.setItem("monis_garden_visit_count", String(nextVisits));
+    setVisitCount(nextVisits);
+
+    if (nextVisits >= 5) {
+      setTimeout(() => {
+        unlockAchievement("Garden Visitor", "Visited the garden 5 times.");
+      }, 3000);
+    }
+  }, []);
 
   // Save volume and muted states to local storage
   useEffect(() => {
@@ -926,6 +1484,15 @@ export default function App() {
 
   const next = useCallback(
     (isManual = false) => {
+      if (isManual) {
+        songSkipsRef.current += 1;
+        if (songSkipsRef.current >= 5) {
+          unlockAchievement(
+            "Music Wanderer",
+            "Explored different melodies in the garden.",
+          );
+        }
+      }
       const shouldAutoPlay = isPlaying;
 
       if (playMode === "repeat-one" && !isManual) {
@@ -942,7 +1509,7 @@ export default function App() {
       }
 
       setPendingAutoPlay(shouldAutoPlay);
-      setIsPlaying(false);
+      setIsPlaying(shouldAutoPlay);
 
       if (currentMode === "local") {
         if (localAudioRef.current) {
@@ -978,9 +1545,16 @@ export default function App() {
   );
 
   const prev = () => {
+    songSkipsRef.current += 1;
+    if (songSkipsRef.current >= 5) {
+      unlockAchievement(
+        "Music Wanderer",
+        "Explored different melodies in the garden.",
+      );
+    }
     const shouldAutoPlay = isPlaying;
     setPendingAutoPlay(shouldAutoPlay);
-    setIsPlaying(false);
+    setIsPlaying(shouldAutoPlay);
 
     if (currentMode === "local") {
       if (localAudioRef.current) {
@@ -1155,11 +1729,15 @@ export default function App() {
 
     if (lastTrackIdRef.current !== trackId) {
       if (trackHasCompletedRef.current) {
-        const unlocked = localStorage.getItem("forestFriendUnlocked") === "true";
+        const unlocked =
+          localStorage.getItem("forestFriendUnlocked") === "true";
         if (!unlocked) {
           setCompletedCount((prev) => {
             const next = prev + 1;
-            localStorage.setItem("monis_garden_completed_count", next.toString());
+            localStorage.setItem(
+              "monis_garden_completed_count",
+              next.toString(),
+            );
             if (next >= 5) {
               setShowAchievement(true);
               localStorage.setItem("forestFriendUnlocked", "true");
@@ -1199,7 +1777,9 @@ export default function App() {
     const setupPortal = () => {
       const inner = document.querySelector(".settings-panel-inner");
       if (inner) {
-        let wrapper = inner.querySelector(".nature-about-btn-wrapper") as HTMLDivElement;
+        let wrapper = inner.querySelector(
+          ".nature-about-btn-wrapper",
+        ) as HTMLDivElement;
         if (!wrapper) {
           wrapper = document.createElement("div");
           wrapper.className = "nature-about-btn-wrapper";
@@ -1285,7 +1865,15 @@ export default function App() {
   };
 
   // Helper functions for playlist persistence and clear features
-  const saveLastYoutubePlaylist = ({ url, playlistId, title }: { url: string; playlistId: string; title: string }) => {
+  const saveLastYoutubePlaylist = ({
+    url,
+    playlistId,
+    title,
+  }: {
+    url: string;
+    playlistId: string;
+    title: string;
+  }) => {
     const loadedAt = new Date().toISOString();
     localStorage.setItem("neonPlayer:lastYoutubePlaylistUrl", url);
     localStorage.setItem("neonPlayer:lastYoutubePlaylistId", playlistId);
@@ -1313,7 +1901,9 @@ export default function App() {
   };
 
   const refreshCurrentYoutubePlaylist = async () => {
-    const activePlaylistId = savedPlaylistId || localStorage.getItem("neonPlayer:lastYoutubePlaylistId");
+    const activePlaylistId =
+      savedPlaylistId ||
+      localStorage.getItem("neonPlayer:lastYoutubePlaylistId");
     if (!activePlaylistId) {
       setErrorMessage("No playlist to refresh.");
       return;
@@ -1326,7 +1916,9 @@ export default function App() {
     try {
       const items = await fetchPlaylistItems(activePlaylistId);
       if (!items || items.length === 0) {
-        setErrorMessage("Could not refresh the playlist. It may no longer exist.");
+        setErrorMessage(
+          "Could not refresh the playlist. It may no longer exist.",
+        );
         setIsRefreshingPlaylist(false);
         setPlaylistStatusMessage(null);
         return;
@@ -1338,7 +1930,8 @@ export default function App() {
 
       if (currentSong) {
         const foundIndex = items.findIndex(
-          (item) => item.videoId === currentSong.videoId || item.id === currentSong.id
+          (item) =>
+            item.videoId === currentSong.videoId || item.id === currentSong.id,
         );
         if (foundIndex !== -1) {
           newTrackIndex = foundIndex;
@@ -1351,7 +1944,10 @@ export default function App() {
       setCurrentTrackIndex(newTrackIndex);
       setIsPlaying(keepPlayingState);
 
-      const title = await fetchPlaylistTitle(activePlaylistId) || savedPlaylistTitle || "YouTube Playlist";
+      const title =
+        (await fetchPlaylistTitle(activePlaylistId)) ||
+        savedPlaylistTitle ||
+        "YouTube Playlist";
       const loadedAt = new Date().toISOString();
 
       localStorage.setItem("neonPlayer:lastYoutubePlaylistTitle", title);
@@ -1385,12 +1981,16 @@ export default function App() {
           setIsPlaying(false);
           setPendingAutoPlay(false);
 
-          const savedUrl = localStorage.getItem("neonPlayer:lastYoutubePlaylistUrl");
+          const savedUrl = localStorage.getItem(
+            "neonPlayer:lastYoutubePlaylistUrl",
+          );
           if (savedUrl) {
             setYoutubeUrl(savedUrl);
           }
         } else {
-          setErrorMessage("Saved playlist could not be loaded. It may no longer exist.");
+          setErrorMessage(
+            "Saved playlist could not be loaded. It may no longer exist.",
+          );
         }
       } catch (err) {
         console.error("Failed to auto-load saved playlist on startup:", err);
@@ -1430,7 +2030,8 @@ export default function App() {
         setCurrentTrackIndex(0);
         setIsPlaying(false);
 
-        const title = await fetchPlaylistTitle(playlistId) || "YouTube Playlist";
+        const title =
+          (await fetchPlaylistTitle(playlistId)) || "YouTube Playlist";
         saveLastYoutubePlaylist({
           url: youtubeUrl,
           playlistId,
@@ -1471,9 +2072,13 @@ export default function App() {
     console.log("Moni's Garden logo clicks:", logoClicks);
     setLogoClicks((prev) => {
       const next = prev + 1;
-      if (next >= 5) {
+      if (next >= 3) {
         setShowSecretModal(true);
         setExtraLeaves(true);
+        unlockAchievement(
+          "Heart Collector",
+          "Found the secret leaf breeze easter egg.",
+        );
         return 0;
       }
       return next;
@@ -1519,7 +2124,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div
-        className={`player nature-theme-container ${fireflyActive ? "firefly-mode" : ""} season-${season} intensity-${animationIntensity}`}
+        className={`player nature-theme-container ${fireflyActive ? "firefly-mode" : ""} season-${season} intensity-${animationIntensity} ${specialThankGlowActive ? "special-thank-glow" : ""}`}
       >
         {currentMode === "youtube" && currentTrack.videoId ? (
           <YouTubeIframe
@@ -1552,8 +2157,14 @@ export default function App() {
         )}
 
         {/* Decorative Fireflies Layer */}
-        <div className={`nature-fireflies-layer ${fireflyActive ? "is-visible" : ""}`} aria-hidden="true">
-          {GENERATED_FIREFLIES.slice(0, getFirefliesCount(animationIntensity, season)).map((f) => (
+        <div
+          className={`nature-fireflies-layer ${fireflyActive ? "is-visible" : ""}`}
+          aria-hidden="true"
+        >
+          {GENERATED_FIREFLIES.slice(
+            0,
+            getFirefliesCount(animationIntensity, season),
+          ).map((f) => (
             <div
               key={f.id}
               className={`firefly size-${f.size} drift-${f.driftVariant}`}
@@ -1588,6 +2199,62 @@ export default function App() {
 
         <div className="nature-card" data-tauri-drag-region>
           <div className="drag-region" data-tauri-drag-region />
+
+          {/* Personalization Overlays */}
+          {activeAchievement && (
+            <div className="achievement-toast">
+              <div className="achievement-toast-header">
+                🌿 Hidden Achievement Unlocked!
+              </div>
+              <div className="achievement-toast-body">
+                <strong>{activeAchievement.title}</strong>:{" "}
+                {activeAchievement.description}
+              </div>
+            </div>
+          )}
+
+          {ambientMessage && (
+            <div
+              className={`ambient-message ${messageType === "note" ? "is-moni-note" : "is-garden-quote"}`}
+            >
+              {ambientMessage}
+            </div>
+          )}
+
+          {specialEventText && (
+            <div className="special-event-overlay">
+              <div className="special-event-text">{specialEventText}</div>
+            </div>
+          )}
+
+          {companion && (
+            <div
+              className={`forest-companion companion-${companion.type} ${companion.isLanded ? "landed" : ""}`}
+              style={{
+                position: "absolute",
+                left: `${companion.x}%`,
+                top: `${companion.y}%`,
+                opacity: companion.opacity,
+                transform: `translate(-50%, -50%) rotate(${companion.rotation}deg)`,
+                transition:
+                  "left 3s ease-in-out, top 3s ease-in-out, transform 1.5s ease-in-out, opacity 1s ease-in-out",
+                zIndex: 8,
+                pointerEvents: "none",
+              }}
+            >
+              {companion.type === "butterfly" && (
+                <ButterflySVG isLanded={companion.isLanded} />
+              )}
+              {companion.type === "bird" && (
+                <BirdSVG isLanded={companion.isLanded} />
+              )}
+              {companion.type === "ladybug" && <LadybugSVG />}
+              {companion.type === "bee" && (
+                <BeeSVG isLanded={companion.isLanded} />
+              )}
+            </div>
+          )}
+
           {/* Botanical Nature Overlay Frame Layer */}
           <div className="nature-frame-layer">
             <img
@@ -1601,7 +2268,8 @@ export default function App() {
           {/* Dynamic Living Garden Particles Layer */}
           <div className="garden-particles-layer" aria-hidden="true">
             {GENERATED_PARTICLES.map((p, index) => {
-              const isActive = index < getParticlesCount(animationIntensity, season);
+              const isActive =
+                index < getParticlesCount(animationIntensity, season);
               return (
                 <div
                   key={p.id}
@@ -1618,8 +2286,8 @@ export default function App() {
               );
             })}
 
-            {/* Special Spawn of Extra Particles (Easter Egg) */}
-            {extraLeaves && (
+            {/* Special Spawn of Extra Particles (Easter Egg or Special Breeze) */}
+            {(extraLeaves || specialBreezeActive) && (
               <div className="extra-leaves-container">
                 {Array.from({ length: 6 }).map((_, idx) => {
                   const id = 100 + idx;
@@ -1630,7 +2298,7 @@ export default function App() {
                       key={id}
                       className={`garden-particle size-${size} drift-${letter} visible`}
                       style={{
-                        left: `${(idx * 15) % 80 + 10}%`,
+                        left: `${((idx * 15) % 80) + 10}%`,
                         top: "-5%",
                         animationDelay: "0s",
                       }}
@@ -1644,7 +2312,11 @@ export default function App() {
           </div>
 
           {/* Seasonal Flowers Layer Overlaid on Botanical Frame */}
-          <SeasonalFlowers season={season} intensity={animationIntensity} />
+          <SeasonalFlowers
+            season={season}
+            intensity={animationIntensity}
+            specialBloomsActive={specialBloomsActive}
+          />
 
           <NatureHeader
             showPlaylistSongs={showPlaylistSongs}
@@ -1663,7 +2335,16 @@ export default function App() {
             onClose={closeWindow}
             onLogoClick={handleLogoClick}
             fireflyActive={fireflyActive}
-            onToggleFirefly={() => setFireflyActive((prev) => !prev)}
+            onToggleFirefly={() => {
+              setFireflyActive((prev) => !prev);
+              fireflyClicksRef.current += 1;
+              if (fireflyClicksRef.current >= 3) {
+                unlockAchievement(
+                  "Firefly Friend",
+                  "Embraced the night forest glow.",
+                );
+              }
+            }}
           />
 
           <CircularAlbumArt thumbnailUrl={currentTrack?.thumbnailUrl} />
@@ -1740,7 +2421,7 @@ export default function App() {
                     onClick={() => {
                       const shouldAutoPlay = isPlaying;
                       handleModeChange("youtube");
-                      setIsPlaying(false);
+                      setIsPlaying(shouldAutoPlay);
                       setPendingAutoPlay(shouldAutoPlay);
                       wasPlayingRef.current = shouldAutoPlay;
                       setCurrentTrackIndex(idx);
@@ -1785,6 +2466,13 @@ export default function App() {
                     onClick={() => {
                       setSeason(s);
                       localStorage.setItem("monis_garden_season", s);
+                      seasonClicksRef.current += 1;
+                      if (seasonClicksRef.current >= 3) {
+                        unlockAchievement(
+                          "Forest Explorer",
+                          "Explored the seasonal magic of the forest.",
+                        );
+                      }
                     }}
                   >
                     {s}
@@ -1801,7 +2489,10 @@ export default function App() {
                     className={`settings-theme-btn ${animationIntensity === intensity ? "active" : ""}`}
                     onClick={() => {
                       setAnimationIntensity(intensity);
-                      localStorage.setItem("monis_garden_animation_intensity", intensity);
+                      localStorage.setItem(
+                        "monis_garden_animation_intensity",
+                        intensity,
+                      );
                     }}
                   >
                     {intensity}
@@ -1851,13 +2542,17 @@ export default function App() {
                           {savedPlaylistTitle || "YouTube Playlist"}
                         </div>
                         {savedPlaylistUrl && (
-                          <div className="saved-playlist-meta" title={savedPlaylistUrl}>
+                          <div
+                            className="saved-playlist-meta"
+                            title={savedPlaylistUrl}
+                          >
                             url: {savedPlaylistUrl}
                           </div>
                         )}
                         {savedPlaylistLoadedAt && (
                           <div className="saved-playlist-meta">
-                            loaded: {new Date(savedPlaylistLoadedAt).toLocaleString()}
+                            loaded:{" "}
+                            {new Date(savedPlaylistLoadedAt).toLocaleString()}
                           </div>
                         )}
                       </div>
@@ -1907,6 +2602,102 @@ export default function App() {
                 </>
               )}
 
+              {/* Garden Magic Custom Section */}
+              <div className="settings-label" style={{ marginTop: "12px" }}>
+                garden magic
+              </div>
+              <div className="settings-theme-row">
+                <button
+                  className={`settings-theme-btn ${quotesEnabled ? "active" : ""}`}
+                  onClick={() => {
+                    const nextVal = !quotesEnabled;
+                    setQuotesEnabled(nextVal);
+                    localStorage.setItem(
+                      "monis_garden_magic_quotes",
+                      String(nextVal),
+                    );
+                  }}
+                  style={{ flex: 1, marginRight: "4px" }}
+                >
+                  quotes: {quotesEnabled ? "on" : "off"}
+                </button>
+                <button
+                  className={`settings-theme-btn ${moniNotesEnabled ? "active" : ""}`}
+                  onClick={() => {
+                    const nextVal = !moniNotesEnabled;
+                    setMoniNotesEnabled(nextVal);
+                    localStorage.setItem(
+                      "monis_garden_moni_notes",
+                      String(nextVal),
+                    );
+                  }}
+                  style={{ flex: 1, marginLeft: "4px" }}
+                >
+                  notes: {moniNotesEnabled ? "on" : "off"}
+                </button>
+              </div>
+              <div className="settings-theme-row" style={{ marginTop: "6px" }}>
+                <button
+                  className={`settings-theme-btn ${companionsEnabled ? "active" : ""}`}
+                  onClick={() => {
+                    const nextVal = !companionsEnabled;
+                    setCompanionsEnabled(nextVal);
+                    localStorage.setItem(
+                      "monis_garden_companions",
+                      String(nextVal),
+                    );
+                  }}
+                  style={{ flex: 1, marginRight: "4px" }}
+                >
+                  companions: {companionsEnabled ? "on" : "off"}
+                </button>
+                <button
+                  className={`settings-theme-btn ${specialEventsEnabled ? "active" : ""}`}
+                  onClick={() => {
+                    const nextVal = !specialEventsEnabled;
+                    setSpecialEventsEnabled(nextVal);
+                    localStorage.setItem(
+                      "monis_garden_special_events",
+                      String(nextVal),
+                    );
+                  }}
+                  style={{ flex: 1, marginLeft: "4px" }}
+                >
+                  events: {specialEventsEnabled ? "on" : "off"}
+                </button>
+              </div>
+
+              {/* Passive Visit Counter and Unlocked Achievements */}
+              <div
+                className="settings-label"
+                style={{
+                  marginTop: "14px",
+                  borderTop: "1px dashed var(--nature-accent)",
+                  paddingTop: "8px",
+                }}
+              >
+                garden stats
+              </div>
+              <div
+                style={{
+                  color: "var(--nature-dark)",
+                  fontSize: "10px",
+                  textAlign: "center",
+                  fontFamily: "Rainyhearts",
+                  lineHeight: "1.3",
+                  marginBottom: "10px",
+                }}
+              >
+                visits count: {visitCount}
+                {unlockedAchievements.length > 0 && (
+                  <div
+                    style={{ marginTop: "4px", color: "var(--nature-accent)" }}
+                  >
+                    unlocked: {unlockedAchievements.join(", ").toLowerCase()}
+                  </div>
+                )}
+              </div>
+
               {playlistStatusMessage && (
                 <div
                   style={{
@@ -1943,95 +2734,130 @@ export default function App() {
         {/* Modals and Overlays */}
 
         {/* Feature 2: Birthday Screen Overlay */}
-        {showBirthday && createPortal(
-          <div
-            className={`nature-birthday-overlay ${birthdayFadeOut ? "fade-out" : ""}`}
-            onClick={closeBirthdayOverlay}
-          >
-            <div className="nature-birthday-content" onClick={(e) => e.stopPropagation()}>
-              <div className="nature-birthday-title">Happy Birthday Moni 🌿</div>
-              <div className="nature-birthday-body">
-                {"May every song bring\na beautiful memory."}
+        {showBirthday &&
+          createPortal(
+            <div
+              className={`nature-birthday-overlay ${birthdayFadeOut ? "fade-out" : ""}`}
+              onClick={closeBirthdayOverlay}
+            >
+              <div
+                className="nature-birthday-content"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="nature-birthday-title">
+                  Happy Birthday Moni 🌿
+                </div>
+                <div className="nature-birthday-body">
+                  {"May every song bring\na beautiful memory."}
+                </div>
+                <div
+                  className="nature-birthday-footer"
+                  onClick={closeBirthdayOverlay}
+                >
+                  Click anywhere to enter the garden
+                </div>
               </div>
-              <div className="nature-birthday-footer" onClick={closeBirthdayOverlay}>
-                Click anywhere to enter the garden
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body,
+          )}
 
         {/* Feature 3: Secret Moni Message Modal */}
-        {showSecretModal && createPortal(
-          <div className={`nature-modal-backdrop ${secretFadeOut ? "fade-out" : ""}`} onClick={closeSecretModal}>
-            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="nature-modal-title">🌿 Hi Moni</div>
-              <div className="nature-modal-body">
-                {"I hope this player\nalways finds you\na good song."}
-              </div>
-              <button
-                className="nature-modal-button"
-                onClick={closeSecretModal}
+        {showSecretModal &&
+          createPortal(
+            <div
+              className={`nature-modal-backdrop ${secretFadeOut ? "fade-out" : ""}`}
+              onClick={closeSecretModal}
+            >
+              <div
+                className="nature-modal-content"
+                onClick={(e) => e.stopPropagation()}
               >
-                Continue
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+                <div className="nature-modal-title">🌿 Hi Moni</div>
+                <div className="nature-modal-body">
+                  {"I hope this player\nalways finds you\na good song."}
+                </div>
+                <button
+                  className="nature-modal-button"
+                  onClick={closeSecretModal}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )}
 
         {/* Feature 5: Forest Friend Achievement Modal */}
-        {showAchievement && createPortal(
-          <div className={`nature-modal-backdrop ${achievementFadeOut ? "fade-out" : ""}`} onClick={closeAchievementModal}>
-            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="nature-modal-title">🌿 Forest Friend Unlocked</div>
-              <div className="nature-modal-body">
-                {`Thanks for spending time\nin Moni's Garden.\n\nCompleted: ${completedCount} songs`}
-              </div>
-              <button
-                className="nature-modal-button"
-                onClick={closeAchievementModal}
+        {showAchievement &&
+          createPortal(
+            <div
+              className={`nature-modal-backdrop ${achievementFadeOut ? "fade-out" : ""}`}
+              onClick={closeAchievementModal}
+            >
+              <div
+                className="nature-modal-content"
+                onClick={(e) => e.stopPropagation()}
               >
-                Continue
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+                <div className="nature-modal-title">
+                  🌿 Forest Friend Unlocked
+                </div>
+                <div className="nature-modal-body">
+                  {`Thanks for spending time\nin Moni's Garden.\n\nCompleted: ${completedCount} songs`}
+                </div>
+                <button
+                  className="nature-modal-button"
+                  onClick={closeAchievementModal}
+                >
+                  Continue
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )}
 
         {/* Feature 6: About Modal */}
-        {showAboutModal && createPortal(
-          <div className={`nature-modal-backdrop ${aboutFadeOut ? "fade-out" : ""}`} onClick={closeAboutModal}>
-            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="nature-modal-title">Moni's Garden</div>
-              <div className="nature-modal-body">
-                {"Version 1.0\n\nCreated for Moni 🌿\n\nThank you for inspiring\nthis little forest."}
-              </div>
-              <button
-                className="nature-modal-button"
-                onClick={closeAboutModal}
+        {showAboutModal &&
+          createPortal(
+            <div
+              className={`nature-modal-backdrop ${aboutFadeOut ? "fade-out" : ""}`}
+              onClick={closeAboutModal}
+            >
+              <div
+                className="nature-modal-content"
+                onClick={(e) => e.stopPropagation()}
               >
-                Return
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+                <div className="nature-modal-title">Moni's Garden</div>
+                <div className="nature-modal-body">
+                  {
+                    "Created for Moni 🌿\n\nThank you for inspiring\nthis little forest."
+                  }
+                </div>
+                <button
+                  className="nature-modal-button"
+                  onClick={closeAboutModal}
+                >
+                  Return
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )}
 
         {/* Portal for About button inside Settings Panel */}
-        {settingsPanelContainer && createPortal(
-          <button
-            className="settings-theme-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowAboutModal(true);
-            }}
-            style={{ width: "100%", marginTop: "15px" }}
-          >
-            About This Player
-          </button>,
-          settingsPanelContainer
-        )}
+        {settingsPanelContainer &&
+          createPortal(
+            <button
+              className="settings-theme-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowAboutModal(true);
+              }}
+              style={{ width: "100%", marginTop: "15px" }}
+            >
+              About This Player
+            </button>,
+            settingsPanelContainer,
+          )}
       </div>
     </ErrorBoundary>
   );

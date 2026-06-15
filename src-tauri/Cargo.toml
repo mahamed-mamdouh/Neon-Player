@@ -1,5 +1,5 @@
 [package]
-name = "neon-player"
+name = "monis-garden"
 version = "2.1.1"
 description = "A Tauri App"
 authors = ["you"]

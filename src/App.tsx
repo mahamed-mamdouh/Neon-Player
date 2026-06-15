@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import "./App.css";
-import useTheme from "./hooks/useTheme";
 import { YouTubeIframe } from "./components/YouTubeIframe";
 import {
   fetchPlaylistItems,
@@ -10,17 +10,568 @@ import {
   extractYouTubeId,
 } from "./utils/youtubeApi";
 import { formatDuration } from "./utils/time";
-import VintageVinylTheme from "./components/themes/VintageVinylTheme";
-import NaturePixelTheme from "./components/themes/NaturePixelTheme";
 import { resizeWindow, minimizeWindow, closeWindow } from "./utils/windowApi";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
-import progressBarStars from "./assets/progress_bar_stars.png";
-import star from "./assets/star.png";
-import starSelected from "./assets/star_selected.png";
+// Nature Assets
+import artworkFrame from "./assets/nature/artwork_frame.png";
+import closeButton from "./assets/nature/close_button.png";
+import lengthBarEmpty from "./assets/nature/length_bar_empty.png";
+import lengthBarFull from "./assets/nature/length_bar_full.png";
+import minimizeButton from "./assets/nature/minimize_button.png";
+import muteButton from "./assets/nature/mute_button.png";
+import nextButton from "./assets/nature/next_button.png";
+import pauseButton from "./assets/nature/pause_button.png";
+import pinActive from "./assets/nature/pin_active.png";
+import pinInactive from "./assets/nature/pin_inactive.png";
+import playButton from "./assets/nature/play_button.png";
+import previousButton from "./assets/nature/previous_button.png";
+import repeatButton from "./assets/nature/repeat_button.png";
+import repeatOneButton from "./assets/nature/repeat_one_button.png";
+import settingsButton from "./assets/nature/settings_button.png";
+import shuffleButton from "./assets/nature/shuffle_button.png";
+import songsButton from "./assets/nature/songs_button.png";
+import unmuteButton from "./assets/nature/unmute_button.png";
+import volumeBarEmpty from "./assets/nature/volume_bar_empty.png";
+import volumeBarFull from "./assets/nature/volume_bar_full.png";
+import leaf from "./assets/nature/leaf.png";
+import heartLeaf from "./assets/nature/heart_leaf.png";
+import frameNoBackground from "./assets/nature/frame_no_backround.png";
+
+// Firefly Config
+interface FireflyConfig {
+  id: number;
+  left: string;
+  top: string;
+  size: "s" | "m" | "l";
+  color: string;
+  driftVariant: "a" | "b" | "c" | "d";
+  glowVariant: "a" | "b" | "c";
+  delay: string;
+  isHeart?: boolean;
+}
+
+const FIREFLIES: FireflyConfig[] = [
+  { id: 1, left: "15%", top: "20%", size: "m", color: "#ffe46b", driftVariant: "a", glowVariant: "a", delay: "0.2s" },
+  { id: 2, left: "75%", top: "15%", size: "s", color: "#e2ff9e", driftVariant: "b", glowVariant: "b", delay: "1.5s" },
+  { id: 3, left: "30%", top: "45%", size: "l", color: "#ffd885", driftVariant: "c", glowVariant: "c", delay: "0.8s", isHeart: true },
+  { id: 4, left: "85%", top: "50%", size: "m", color: "#ffe46b", driftVariant: "d", glowVariant: "a", delay: "2.1s" },
+  { id: 5, left: "10%", top: "70%", size: "s", color: "#e2ff9e", driftVariant: "a", glowVariant: "b", delay: "0.5s" },
+  { id: 6, left: "60%", top: "80%", size: "l", color: "#ffd885", driftVariant: "b", glowVariant: "c", delay: "3.0s" },
+  { id: 7, left: "45%", top: "25%", size: "m", color: "#ffe46b", driftVariant: "c", glowVariant: "a", delay: "1.1s" },
+  { id: 8, left: "20%", top: "85%", size: "s", color: "#e2ff9e", driftVariant: "d", glowVariant: "b", delay: "2.5s" },
+  { id: 9, left: "70%", top: "65%", size: "m", color: "#ffd885", driftVariant: "a", glowVariant: "c", delay: "0.7s" },
+  { id: 10, left: "50%", top: "55%", size: "l", color: "#ffe46b", driftVariant: "b", glowVariant: "a", delay: "1.9s" },
+  { id: 11, left: "80%", top: "35%", size: "s", color: "#e2ff9e", driftVariant: "c", glowVariant: "b", delay: "2.8s" },
+  { id: 12, left: "35%", top: "75%", size: "m", color: "#ffd885", driftVariant: "d", glowVariant: "c", delay: "1.4s" },
+  { id: 13, left: "90%", top: "25%", size: "l", color: "#ffe46b", driftVariant: "a", glowVariant: "a", delay: "0.4s" },
+  { id: 14, left: "25%", top: "35%", size: "s", color: "#e2ff9e", driftVariant: "b", glowVariant: "b", delay: "2.2s" },
+  { id: 15, left: "65%", top: "40%", size: "m", color: "#ffd885", driftVariant: "c", glowVariant: "c", delay: "1.7s", isHeart: true },
+  { id: 16, left: "55%", top: "10%", size: "s", color: "#ffe46b", driftVariant: "d", glowVariant: "a", delay: "0.9s" },
+];
+
+const getLeafSrc = (index: number) => {
+  const isHeart = (index * 17 + 5) % 10 === 0;
+  return isHeart ? heartLeaf : leaf;
+};
+
+const FireflyIcon = () => (
+  <svg
+    width="100%"
+    height="100%"
+    viewBox="0 0 16 16"
+    fill="currentColor"
+    style={{ display: "block", imageRendering: "pixelated" }}
+  >
+    <path d="M7 2h2v2H7z" fill="currentColor" />
+    <path d="M6 4h4v5H6z" fill="currentColor" opacity="0.8" />
+    <path d="M5 5h1v2H5zm5 0h1v2h-1z" fill="currentColor" opacity="0.5" />
+    <path d="M7 9h2v3H7z" fill="currentColor" />
+  </svg>
+);
+
+const NatureHeader = ({
+  showPlaylistSongs,
+  onTogglePlaylist,
+  showSettings,
+  onToggleSettings,
+  isPinned,
+  onTogglePin,
+  onMinimize,
+  onClose,
+  onLogoClick,
+  fireflyActive,
+  onToggleFirefly,
+}: {
+  showPlaylistSongs: boolean;
+  onTogglePlaylist: () => void;
+  showSettings: boolean;
+  onToggleSettings: () => void;
+  isPinned: boolean;
+  onTogglePin: () => void;
+  onMinimize: () => void;
+  onClose: () => void;
+  onLogoClick: () => void;
+  fireflyActive: boolean;
+  onToggleFirefly: () => void;
+}) => {
+  return (
+    <div className="nature-top-bar" data-tauri-drag-region>
+      <div
+        className="nature-logo"
+        style={{ cursor: "pointer", whiteSpace: "nowrap" }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onLogoClick();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        data-tauri-drag-region
+      >
+        Moni's Garden
+      </div>
+
+      <div className="nature-top-bar-center" onMouseDown={(e) => e.stopPropagation()}>
+        <button
+          className={`nature-image-button nature-firefly-button ${
+            fireflyActive ? "is-active" : ""
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFirefly();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Firefly Mode"
+        >
+          <div className="firefly-svg-wrapper">
+            <FireflyIcon />
+          </div>
+        </button>
+
+        <button
+          className={`nature-image-button nature-songs-button ${
+            showPlaylistSongs ? "is-active" : ""
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePlaylist();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Songs"
+        >
+          <img src={songsButton} alt="Songs" draggable={false} />
+        </button>
+      </div>
+
+      <div
+        className="nature-top-controls"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <button
+          className={`nature-image-button nature-header-button nature-settings-button ${
+            showSettings ? "is-active" : ""
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSettings();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Settings"
+        >
+          <img src={settingsButton} alt="Settings" draggable={false} />
+        </button>
+
+        <button
+          className={`nature-image-button nature-header-button nature-pin-button ${
+            isPinned ? "is-active" : ""
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePin();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title={isPinned ? "Always on Top: ON" : "Always on Top: OFF"}
+        >
+          <img
+            src={isPinned ? pinActive : pinInactive}
+            alt={isPinned ? "Pinned" : "Pin"}
+            draggable={false}
+          />
+        </button>
+
+        <button
+          className="nature-image-button nature-header-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onMinimize();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Minimize"
+        >
+          <img src={minimizeButton} alt="Minimize" draggable={false} />
+        </button>
+
+        <button
+          className="nature-image-button nature-header-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Close"
+        >
+          <img src={closeButton} alt="Close" draggable={false} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const CircularAlbumArt = ({ thumbnailUrl }: { thumbnailUrl?: string }) => {
+  return (
+    <div className="nature-album-section">
+      <div className="nature-album-frame-wrapper">
+        <div className="nature-album-art-circle">
+          {thumbnailUrl ? (
+            <img
+              src={thumbnailUrl}
+              className="nature-album-art"
+              alt="Album art"
+              draggable={false}
+            />
+          ) : (
+            <div className="nature-fallback-art" />
+          )}
+        </div>
+
+        <img
+          src={artworkFrame}
+          className="nature-artwork-frame"
+          alt=""
+          draggable={false}
+        />
+      </div>
+    </div>
+  );
+};
+
+const TrackInfo = ({ title, artist }: { title?: string; artist?: string }) => {
+  return (
+    <div className="nature-info-section" data-tauri-drag-region>
+      <h1 className="nature-title" title={title || "No Track Loaded"}>
+        {title || "No Track Loaded"}
+      </h1>
+
+      <p className="nature-artist" title={artist || "Unknown Artist"}>
+        {artist || "Unknown Artist"}
+      </p>
+
+      <p className="nature-album">Album: Forest Whispers</p>
+    </div>
+  );
+};
+
+const ProgressSection = ({
+  currentTime,
+  duration,
+  seek,
+}: {
+  currentTime: number;
+  duration: number;
+  seek: (pct: number) => void;
+}) => {
+  const progress =
+    duration > 0 ? Math.max(0, Math.min(1, currentTime / duration)) : 0;
+
+  const handleProgressMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    const getPct = (clientX: number) => {
+      const vw = window.innerWidth;
+      const leftCap = (14 / 306) * vw;
+      const rightCap = (14 / 306) * vw;
+      const usableWidth = rect.width - leftCap - rightCap;
+      if (usableWidth <= 0) return 0;
+      const relativeX = clientX - rect.left - leftCap;
+      return Math.max(0, Math.min(1, relativeX / usableWidth));
+    };
+
+    seek(getPct(e.clientX));
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      seek(getPct(moveEvent.clientX));
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
+  return (
+    <div className="nature-progress-section" onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        className="nature-image-bar nature-length-bar"
+        onMouseDown={handleProgressMouseDown}
+      >
+        <img
+          src={lengthBarEmpty}
+          className="nature-bar-empty"
+          alt=""
+          draggable={false}
+        />
+
+        <div
+          className="nature-bar-fill-window"
+          style={{
+            left: 0,
+            width: progress > 0
+              ? `calc(var(--nature-progress-cap-left) + ${progress} * (100% - var(--nature-progress-cap-left) - var(--nature-progress-cap-right)))`
+              : "0px",
+          }}
+        >
+          <img
+            src={lengthBarFull}
+            className="nature-bar-full"
+            alt=""
+            draggable={false}
+          />
+        </div>
+
+        <img
+          src={leaf}
+          className="nature-bar-thumb nature-progress-thumb"
+          style={{
+            left: `calc(var(--nature-progress-cap-left) + ${progress} * (100% - var(--nature-progress-cap-left) - var(--nature-progress-cap-right)))`,
+          }}
+          alt=""
+          draggable={false}
+        />
+      </div>
+
+      <div className="nature-time-row">
+        <span>{formatDuration(duration > 0 ? currentTime : 0)}</span>
+        <span>{formatDuration(duration)}</span>
+      </div>
+    </div>
+  );
+};
+
+const PlaybackControls = ({
+  isPlaying,
+  playMode,
+  onTogglePlay,
+  onNext,
+  onPrev,
+  toggleShuffle,
+  cycleRepeatMode,
+}: {
+  isPlaying: boolean;
+  playMode: "normal" | "shuffle" | "repeat" | "repeat-one";
+  onTogglePlay: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  toggleShuffle: () => void;
+  cycleRepeatMode: () => void;
+}) => {
+  const isShuffleActive = playMode === "shuffle";
+  const repeatAsset =
+    playMode === "repeat-one" ? repeatOneButton : repeatButton;
+  const isRepeatActive = playMode === "repeat" || playMode === "repeat-one";
+
+  return (
+    <div className="playback-row" onMouseDown={(e) => e.stopPropagation()}>
+      <div className="center-controls">
+        <button
+          className={`nature-image-button nature-control-button nature-side-control nature-shuffle-button ${
+            isShuffleActive ? "is-active" : "is-inactive"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleShuffle();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Shuffle"
+        >
+          <img src={shuffleButton} alt="Shuffle" draggable={false} />
+        </button>
+
+        <button
+          className="nature-image-button nature-control-button nature-small-round-control"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrev();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Previous"
+        >
+          <img src={previousButton} alt="Previous" draggable={false} />
+        </button>
+
+        <button
+          className="nature-image-button nature-control-button nature-main-play-control"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePlay();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title={isPlaying ? "Pause" : "Play"}
+        >
+          <img
+            src={isPlaying ? playButton : pauseButton}
+            alt={isPlaying ? "Pause" : "Play"}
+            draggable={false}
+          />
+        </button>
+
+        <button
+          className="nature-image-button nature-control-button nature-small-round-control"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNext();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title="Next"
+        >
+          <img src={nextButton} alt="Next" draggable={false} />
+        </button>
+
+        <button
+          className={`nature-image-button nature-control-button nature-side-control nature-repeat-button ${
+            isRepeatActive ? "is-active" : "is-inactive"
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            cycleRepeatMode();
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+          title={playMode === "repeat-one" ? "Repeat One" : "Repeat"}
+        >
+          <img
+            src={repeatAsset}
+            alt={playMode === "repeat-one" ? "Repeat One" : "Repeat"}
+            draggable={false}
+          />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const VolumeControl = ({
+  volume,
+  muted,
+  onToggleMute,
+  onChangeVolume,
+}: {
+  volume: number;
+  muted: boolean;
+  onToggleMute: () => void;
+  onChangeVolume: (val: number) => void;
+}) => {
+  const volumePct = muted ? 0 : Math.round(volume * 100);
+  const volumeVal = volumePct / 100;
+
+  const handleVolumeMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = e.currentTarget.getBoundingClientRect();
+
+    const getPct = (clientX: number) => {
+      const vw = window.innerWidth;
+      const leftCap = (10 / 306) * vw;
+      const rightCap = (8 / 306) * vw;
+      const usableWidth = rect.width - leftCap - rightCap;
+      if (usableWidth <= 0) return 0;
+      const relativeX = clientX - rect.left - leftCap;
+      return Math.max(0, Math.min(1, relativeX / usableWidth));
+    };
+
+    onChangeVolume(getPct(e.clientX));
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      onChangeVolume(getPct(moveEvent.clientX));
+    };
+
+    const onMouseUp = () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  };
+
+  return (
+    <div className="nature-volume-row" onMouseDown={(e) => e.stopPropagation()}>
+      <button
+        className="nature-image-button nature-volume-button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleMute();
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+        title={muted ? "Unmute" : "Mute"}
+      >
+        <img
+          src={muted ? muteButton : unmuteButton}
+          alt={muted ? "Muted" : "Volume"}
+          draggable={false}
+        />
+      </button>
+
+      <div
+        className="nature-image-bar nature-volume-bar"
+        onMouseDown={handleVolumeMouseDown}
+      >
+        <img
+          src={volumeBarEmpty}
+          className="nature-bar-empty"
+          alt=""
+          draggable={false}
+        />
+
+        <div
+          className="nature-bar-fill-window"
+          style={{
+            left: 0,
+            width: volumeVal > 0
+              ? `calc(var(--nature-volume-cap-left) + ${volumeVal} * (100% - var(--nature-volume-cap-left) - var(--nature-volume-cap-right)))`
+              : "0px",
+          }}
+        >
+          <img
+            src={volumeBarFull}
+            className="nature-bar-full nature-volume-bar-full"
+            alt=""
+            draggable={false}
+          />
+        </div>
+
+        <img
+          src={leaf}
+          className="nature-bar-thumb nature-volume-thumb"
+          style={{
+            left: `calc(var(--nature-volume-cap-left) + ${volumeVal} * (100% - var(--nature-volume-cap-left) - var(--nature-volume-cap-right)))`,
+          }}
+          alt=""
+          draggable={false}
+        />
+      </div>
+
+      <span className="nature-volume-text">{volumePct}%</span>
+    </div>
+  );
+};
 
 function useResize(corner: string) {
   const onMouseDown = useCallback(
@@ -50,43 +601,6 @@ function useResize(corner: string) {
 
   return onMouseDown;
 }
-
-function MarqueeText({ className, text }: { className: string; text: string }) {
-  const outerRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
-  const [shouldScroll, setShouldScroll] = useState(false);
-
-  useEffect(() => {
-    const outer = outerRef.current;
-    const textEl = textRef.current;
-    if (!outer || !textEl) return;
-    setShouldScroll(textEl.offsetWidth > outer.clientWidth);
-  }, [text]);
-
-  return (
-    <div className={`${className} marquee-container`} ref={outerRef}>
-      <span ref={textRef} className="marquee-measure">
-        {text}
-      </span>
-      <span className={shouldScroll ? "marquee-scroll" : ""}>
-        {text}
-        {shouldScroll && <span className="marquee-gap">{text}</span>}
-      </span>
-    </div>
-  );
-}
-
-const PinIcon = () => (
-  <svg
-    width="100%"
-    height="100%"
-    viewBox="0 0 16 16"
-    fill="currentColor"
-    style={{ imageRendering: "pixelated" }}
-  >
-    <path d="M7 3h2v1H7zM6 4h4v1H6zM5 5h6v2H5zM6 7h4v1H6zM7 8v5h2V8z" />
-  </svg>
-);
 
 export default function App() {
   const [showSettings, setShowSettings] = useState(false);
@@ -168,12 +682,36 @@ export default function App() {
   const [playMode, setPlayMode] = useState<
     "normal" | "shuffle" | "repeat" | "repeat-one"
   >("normal");
-  const [volumeHovered, setVolumeHovered] = useState(false);
   const [volumeDragging, setVolumeDragging] = useState(false);
   const volumeBarRef = useRef<HTMLDivElement>(null);
-  const seekRef = useRef<HTMLDivElement>(null);
 
-  const { theme, selectTheme, assets } = useTheme();
+  const [isPinned, setIsPinned] = useState(() => {
+    const saved = localStorage.getItem("neon_player_pinned");
+    return saved === "true";
+  });
+
+  // Garden States
+  const [showBirthday, setShowBirthday] = useState(true);
+  const [birthdayFadeOut, setBirthdayFadeOut] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
+  const [showSecretModal, setShowSecretModal] = useState(false);
+  const [secretFadeOut, setSecretFadeOut] = useState(false);
+  const [extraLeaves, setExtraLeaves] = useState(false);
+
+  const [completedCount, setCompletedCount] = useState<number>(() => {
+    const saved = localStorage.getItem("monis_garden_completed_count");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+  const [showAchievement, setShowAchievement] = useState(false);
+  const [achievementFadeOut, setAchievementFadeOut] = useState(false);
+
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [aboutFadeOut, setAboutFadeOut] = useState(false);
+  const [settingsPanelContainer, setSettingsPanelContainer] = useState<HTMLDivElement | null>(null);
+
+  const [fireflyActive, setFireflyActive] = useState(false);
+  const [season, setSeason] = useState<string>(() => localStorage.getItem("monis_garden_season") || "spring");
+  const [animationIntensity, setAnimationIntensity] = useState<string>(() => localStorage.getItem("monis_garden_animation_intensity") || "normal");
 
   // Save volume and muted states to local storage
   useEffect(() => {
@@ -183,11 +721,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("neon_player_muted", muted.toString());
   }, [muted]);
-
-  const [isPinned, setIsPinned] = useState(() => {
-    const saved = localStorage.getItem("neon_player_pinned");
-    return saved === "true";
-  });
 
   useEffect(() => {
     const updateAlwaysOnTop = async () => {
@@ -211,18 +744,6 @@ export default function App() {
       return next;
     });
   };
-
-  const [recordFrame, setRecordFrame] = useState(0);
-  const [needleFrame, setNeedleFrame] = useState(0);
-  const [isPink, setIsPink] = useState(theme === "pink");
-  const [swapping, setSwapping] = useState(false);
-  const [needleLifted, setNeedleLifted] = useState(false);
-  const [starHovered, setStarHovered] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const [hoverProgress, setHoverProgress] = useState<number | null>(null);
-
-  const prevTrackRef = useRef<string | null>(null);
-  const [needleChangeFrame, setNeedleChangeFrame] = useState(0);
 
   const defaultThumbnail =
     "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=80&h=80&q=80";
@@ -345,15 +866,6 @@ export default function App() {
     }
   };
 
-  const cyclePlayMode = useCallback(() => {
-    setPlayMode((m) => {
-      if (m === "normal") return "shuffle";
-      if (m === "shuffle") return "repeat";
-      if (m === "repeat") return "repeat-one";
-      return "normal";
-    });
-  }, []);
-
   const toggleShuffle = useCallback(() => {
     setPlayMode((m) => (m === "shuffle" ? "normal" : "shuffle"));
   }, []);
@@ -365,31 +877,6 @@ export default function App() {
       return "repeat";
     });
   }, []);
-
-  useEffect(() => {
-    if (!dragging) return;
-    const onMouseMove = (e: MouseEvent) => {
-      if (!seekRef.current) return;
-      const rect = seekRef.current.getBoundingClientRect();
-      const pct = Math.max(
-        0,
-        Math.min(1, (e.clientX - rect.left) / rect.width),
-      );
-      setHoverProgress(pct);
-      seek(pct);
-    };
-    const onMouseUp = () => {
-      setDragging(false);
-      setStarHovered(false);
-      setHoverProgress(null);
-    };
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [dragging, duration]);
 
   useEffect(() => {
     if (!volumeDragging) return;
@@ -404,7 +891,6 @@ export default function App() {
     };
     const onMouseUp = () => {
       setVolumeDragging(false);
-      setVolumeHovered(false);
     };
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", onMouseUp);
@@ -413,54 +899,6 @@ export default function App() {
       window.removeEventListener("mouseup", onMouseUp);
     };
   }, [volumeDragging]);
-
-  const currentFrames = isPink ? assets.recordFramesA : assets.recordFramesB;
-  const incomingFrames = isPink ? assets.recordFramesB : assets.recordFramesA;
-
-  useEffect(() => {
-    if (!isPlaying || swapping) return;
-    const interval = setInterval(() => {
-      setRecordFrame((f) => (f + 1) % currentFrames.length);
-      setNeedleFrame((f) => (f + 1) % assets.needlePlayFrames.length);
-    }, 400);
-    return () => clearInterval(interval);
-  }, [
-    isPlaying,
-    swapping,
-    currentFrames.length,
-    assets.needlePlayFrames.length,
-  ]);
-
-  useEffect(() => {
-    if (prevTrackRef.current === currentTrack.title) return;
-    const wasInitialOrPlaceholder =
-      prevTrackRef.current === null || prevTrackRef.current === "No track";
-    prevTrackRef.current = currentTrack.title;
-    if (
-      currentTrack.title === "No track" ||
-      wasInitialOrPlaceholder ||
-      needleLifted
-    )
-      return;
-
-    setNeedleLifted(true);
-    setNeedleChangeFrame(0);
-
-    setTimeout(() => setNeedleChangeFrame(1), 200);
-    setTimeout(() => setSwapping(true), 400);
-
-    setTimeout(() => {
-      setIsPink((p) => !p);
-      setRecordFrame(0);
-      setSwapping(false);
-    }, 1000);
-
-    setTimeout(() => {
-      setNeedleChangeFrame(0);
-      setNeedleLifted(false);
-      setNeedleFrame(0);
-    }, 1100);
-  }, [currentTrack.title, needleLifted]);
 
   // Synchronize volume and mute to the local audio element
   useEffect(() => {
@@ -554,6 +992,101 @@ export default function App() {
       };
     }
   }, [currentTrack.title, pendingAutoPlay, currentMode]);
+
+  // Tracking song completion (Achievement)
+  const lastTrackIdRef = useRef<string | null>(null);
+  const trackHasCompletedRef = useRef<boolean>(false);
+  const trackId = currentTrack?.id || null;
+
+  useEffect(() => {
+    if (!trackId) {
+      lastTrackIdRef.current = null;
+      trackHasCompletedRef.current = false;
+      return;
+    }
+
+    if (lastTrackIdRef.current !== trackId) {
+      if (trackHasCompletedRef.current) {
+        const unlocked = localStorage.getItem("forestFriendUnlocked") === "true";
+        if (!unlocked) {
+          setCompletedCount((prev) => {
+            const next = prev + 1;
+            localStorage.setItem("monis_garden_completed_count", next.toString());
+            if (next >= 5) {
+              setShowAchievement(true);
+              localStorage.setItem("forestFriendUnlocked", "true");
+            }
+            return next;
+          });
+        }
+      }
+      lastTrackIdRef.current = trackId;
+      trackHasCompletedRef.current = false;
+    }
+
+    if (duration > 0 && currentTime >= duration - 1) {
+      trackHasCompletedRef.current = true;
+    }
+  }, [trackId, currentTime, duration]);
+
+  // Effect for extra floating leaves timeout
+  useEffect(() => {
+    if (extraLeaves) {
+      const timer = setTimeout(() => {
+        setExtraLeaves(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [extraLeaves]);
+
+  // Portal for "About This Player" button inside Settings panel
+  useEffect(() => {
+    if (!showSettings) {
+      setSettingsPanelContainer(null);
+      return;
+    }
+
+    let observer: MutationObserver | null = null;
+
+    const setupPortal = () => {
+      const inner = document.querySelector(".settings-panel-inner");
+      if (inner) {
+        let wrapper = inner.querySelector(".nature-about-btn-wrapper") as HTMLDivElement;
+        if (!wrapper) {
+          wrapper = document.createElement("div");
+          wrapper.className = "nature-about-btn-wrapper";
+          inner.appendChild(wrapper);
+        } else if (inner.lastChild !== wrapper) {
+          inner.appendChild(wrapper);
+        }
+        setSettingsPanelContainer(wrapper);
+
+        if (!observer) {
+          observer = new MutationObserver(() => {
+            if (inner.lastChild !== wrapper) {
+              inner.appendChild(wrapper);
+            }
+          });
+          observer.observe(inner, { childList: true });
+        }
+      }
+    };
+
+    setupPortal();
+    const timer = setTimeout(setupPortal, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (observer) {
+        (observer as MutationObserver).disconnect();
+      }
+      const inner = document.querySelector(".settings-panel-inner");
+      const wrapper = inner?.querySelector(".nature-about-btn-wrapper");
+      if (inner && wrapper && inner.contains(wrapper)) {
+        inner.removeChild(wrapper);
+      }
+    };
+  }, [showSettings]);
 
   const handleSelectLocalAudio = async () => {
     try {
@@ -651,9 +1184,8 @@ export default function App() {
         return;
       }
 
-      // Check current song selection before updating
       const currentSong = playlist[currentTrackIndex];
-      let newTrackIndex = 0; // Default fallback to first song
+      let newTrackIndex = 0;
       let keepPlayingState = isPlaying;
 
       if (currentSong) {
@@ -663,7 +1195,6 @@ export default function App() {
         if (foundIndex !== -1) {
           newTrackIndex = foundIndex;
         } else {
-          // If the current song was removed, fall back to first song and do not auto-play
           keepPlayingState = false;
         }
       }
@@ -672,7 +1203,6 @@ export default function App() {
       setCurrentTrackIndex(newTrackIndex);
       setIsPlaying(keepPlayingState);
 
-      // Fetch latest title just in case it changed
       const title = await fetchPlaylistTitle(activePlaylistId) || savedPlaylistTitle || "YouTube Playlist";
       const loadedAt = new Date().toISOString();
 
@@ -750,9 +1280,8 @@ export default function App() {
         }
         setPlaylist(items);
         setCurrentTrackIndex(0);
-        setIsPlaying(false); // Disables autoplay on launch/load!
+        setIsPlaying(false);
 
-        // Save last loaded playlist details
         const title = await fetchPlaylistTitle(playlistId) || "YouTube Playlist";
         saveLastYoutubePlaylist({
           url: youtubeUrl,
@@ -777,7 +1306,7 @@ export default function App() {
           ]);
         }
         setCurrentTrackIndex(0);
-        setIsPlaying(false); // Disables autoplay on launch/load!
+        setIsPlaying(false);
       }
       setShowSettings(false);
     } catch (err: any) {
@@ -790,17 +1319,59 @@ export default function App() {
     }
   };
 
+  const handleLogoClick = () => {
+    console.log("Moni's Garden logo clicks:", logoClicks);
+    setLogoClicks((prev) => {
+      const next = prev + 1;
+      if (next >= 5) {
+        setShowSecretModal(true);
+        setExtraLeaves(true);
+        return 0;
+      }
+      return next;
+    });
+  };
+
+  const closeBirthdayOverlay = () => {
+    setBirthdayFadeOut(true);
+    setTimeout(() => {
+      setShowBirthday(false);
+    }, 800);
+  };
+
+  const closeAboutModal = () => {
+    setAboutFadeOut(true);
+    setTimeout(() => {
+      setShowAboutModal(false);
+      setAboutFadeOut(false);
+    }, 400);
+  };
+
+  const closeSecretModal = () => {
+    setSecretFadeOut(true);
+    setTimeout(() => {
+      setShowSecretModal(false);
+      setSecretFadeOut(false);
+    }, 400);
+  };
+
+  const closeAchievementModal = () => {
+    setAchievementFadeOut(true);
+    setTimeout(() => {
+      setShowAchievement(false);
+      setAchievementFadeOut(false);
+    }, 400);
+  };
+
   const resizeTL = useResize("top-left");
   const resizeTR = useResize("top-right");
   const resizeBL = useResize("bottom-left");
   const resizeBR = useResize("bottom-right");
 
-  const progress = duration > 0 ? currentTime / duration : 0;
-
   return (
-    <ErrorBoundary theme={theme} assets={assets}>
+    <ErrorBoundary>
       <div
-        className={`player ${theme === "blue" ? "theme-blue" : theme === "vintage" ? "theme-vintage" : theme === "nature" ? "theme-nature" : ""}`}
+        className={`player nature-theme-container ${fireflyActive ? "firefly-mode" : ""} season-${season} intensity-${animationIntensity}`}
       >
         {currentMode === "youtube" && currentTrack.videoId ? (
           <YouTubeIframe
@@ -832,384 +1403,147 @@ export default function App() {
           />
         )}
 
-        {theme === "vintage" && (
-          <VintageVinylTheme
-            isPlaying={isPlaying}
-            currentTrack={currentTrack}
-            currentTime={currentTime}
-            duration={duration}
-            onTogglePlay={togglePlay}
-            onNext={() => next(true)}
-            onPrev={prev}
-            seek={seek}
-            onMinimize={minimizeWindow}
-            onClose={closeWindow}
-            onToggleSettings={() => {
-              setShowSettings((v) => !v);
-              setShowPlaylistSongs(false);
-            }}
-            onTogglePlaylist={() => {
-              setShowPlaylistSongs((v) => !v);
-              setShowSettings(false);
-            }}
-            showSettings={showSettings}
-            showPlaylistSongs={showPlaylistSongs}
-            volume={volume}
-            muted={muted}
-            onToggleMute={toggleMute}
-            onChangeVolume={setVolume}
-            isPinned={isPinned}
-            onTogglePin={handleTogglePin}
-          />
-        )}
-        {theme === "nature" && (
-          <NaturePixelTheme
-            isPlaying={isPlaying}
-            currentTrack={currentTrack}
-            currentTime={currentTime}
-            duration={duration}
-            onTogglePlay={togglePlay}
-            onNext={() => next(true)}
-            onPrev={prev}
-            seek={seek}
-            onMinimize={minimizeWindow}
-            onClose={closeWindow}
-            onToggleSettings={() => {
-              setShowSettings((v) => !v);
-              setShowPlaylistSongs(false);
-            }}
-            onTogglePlaylist={() => {
-              setShowPlaylistSongs((v) => !v);
-              setShowSettings(false);
-            }}
-            showSettings={showSettings}
-            showPlaylistSongs={showPlaylistSongs}
-            volume={volume}
-            muted={muted}
-            onToggleMute={() => {
-              console.log("MUTE CLICKED");
-              toggleMute();
-            }}
-            onChangeVolume={setVolume}
-            isPinned={isPinned}
-            onTogglePin={handleTogglePin}
-            playMode={playMode}
-            toggleShuffle={() => {
-              console.log("SHUFFLE CLICKED");
-              toggleShuffle();
-            }}
-            cycleRepeatMode={() => {
-              console.log("REPEAT CLICKED");
-              cycleRepeatMode();
-            }}
-          />
-        )}
-
-        <img src={assets.frame} className="layer" alt="" draggable={false} />
-
-        <div className="window-title" data-tauri-drag-region>
-          neon player
+        {/* Decorative Fireflies Layer */}
+        <div className={`nature-fireflies-layer ${fireflyActive ? "is-visible" : ""}`} aria-hidden="true">
+          {FIREFLIES.map((f) => (
+            <div
+              key={f.id}
+              className={`firefly size-${f.size} drift-${f.driftVariant}`}
+              style={{
+                left: f.left,
+                top: f.top,
+                animationDelay: f.delay,
+              }}
+            >
+              <div
+                className={`firefly-glow glow-${f.glowVariant}`}
+                style={{
+                  color: f.color,
+                  animationDelay: f.delay,
+                }}
+              >
+                {f.isHeart ? (
+                  <svg
+                    viewBox="0 0 10 10"
+                    fill="currentColor"
+                    style={{ display: "block", width: "100%", height: "100%" }}
+                  >
+                    <path d="M5 9C5 9 1 6 1 3.5C1 1.5 2.5 0.5 5 2.5C7.5 0.5 9 1.5 9 3.5C9 6 5 9 5 9Z" />
+                  </svg>
+                ) : (
+                  <div className="firefly-pixel-body" />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <img
-          src={assets.recordPlayer}
-          className="record-player"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={currentFrames[recordFrame]}
-          className={`record-player ${swapping ? "record-slide-out" : ""}`}
-          alt=""
-          draggable={false}
-        />
-        {swapping && (
-          <img
-            src={incomingFrames[0]}
-            className="record-player record-slide-in"
-            alt=""
-            draggable={false}
-          />
-        )}
-        <img
-          src={
-            needleLifted
-              ? assets.needleChangeFrames[needleChangeFrame]
-              : assets.needlePlayFrames[needleFrame]
-          }
-          className="record-player"
-          alt=""
-          draggable={false}
-        />
-
-        <img
-          src={assets.frameNoBg}
-          className="layer frame-overlay"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={assets.plant}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-
-        <img
-          src={assets.progressBar}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={progressBarStars}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-          style={{
-            clipPath: `inset(0 ${(1 - (131 + (hoverProgress ?? progress) * 226 + 10) / 512) * 100}% 0 0)`,
-          }}
-        />
-        <img
-          src={starHovered ? starSelected : star}
-          className={`layer layer-ui star-indicator ${starHovered ? "star-hovered" : ""}`}
-          alt=""
-          draggable={false}
-          style={{
-            transform: `translateX(calc(-3 / 306 * 100vw + ${(hoverProgress ?? progress) * (226 / 512) * 171.9}vw))`,
-          }}
-        />
-
-        <img
-          src={assets.backwardsButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={isPlaying ? assets.pauseButton : assets.playButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={assets.forwardsButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-
-        <img
-          src={muted ? assets.muteButton : assets.volumeButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-          style={{ opacity: 0.8 }}
-        />
-
-        <img
-          src={
-            playMode === "repeat" || playMode === "repeat-one"
-              ? assets.repeatButton
-              : assets.shuffleButton
-          }
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-          style={{ opacity: playMode === "normal" ? 0.4 : 0.8 }}
-        />
-
-        <img
-          src={assets.minimizerButton}
-          className="layer layer-ui minimizer-layer"
-          alt=""
-          draggable={false}
-        />
-        <img
-          src={assets.windowButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-          style={{ display: "none" }}
-        />
-        <img
-          src={assets.exitButton}
-          className="layer layer-ui"
-          alt=""
-          draggable={false}
-        />
-
-        <img
-          src={assets.settings}
-          className="layer layer-ui settings-layer"
-          alt=""
-          draggable={false}
-        />
-
-        <svg width="0" height="0" style={{ position: "absolute" }}>
-          <defs>
-            <clipPath id="album-mask" clipPathUnits="objectBoundingBox">
-              <rect x="0.07317" y="0" width="0.85366" height="1" />
-              <rect x="0.04878" y="0.02439" width="0.90244" height="0.95122" />
-              <rect x="0.02439" y="0.04878" width="0.95122" height="0.90244" />
-              <rect x="0" y="0.07317" width="1" height="0.85366" />
-            </clipPath>
-          </defs>
-        </svg>
-
-        {currentTrack.thumbnailUrl && (
-          <div className="album-mask">
+        <div className="nature-card" data-tauri-drag-region>
+          <div className="drag-region" data-tauri-drag-region />
+          {/* Botanical Nature Overlay Frame Layer */}
+          <div className="nature-frame-layer">
             <img
-              src={currentTrack.thumbnailUrl}
-              className="album-art"
+              src={frameNoBackground}
+              className="nature-frame-image"
               alt=""
               draggable={false}
             />
           </div>
-        )}
 
-        <img
-          src={assets.albumFrame}
-          className="layer album-frame-layer"
-          alt=""
-          draggable={false}
-        />
+          {/* Decorative Floating Leaves Layer */}
+          <div className="nature-floating-leaves" aria-hidden="true">
+            <img src={getLeafSrc(1)} className="nature-floating-leaf size-s leaf-a" alt="" draggable={false} />
+            <img src={getLeafSrc(2)} className="nature-floating-leaf size-m leaf-b" alt="" draggable={false} />
+            <img src={getLeafSrc(3)} className="nature-floating-leaf size-l leaf-c" alt="" draggable={false} />
+            <img src={getLeafSrc(4)} className="nature-floating-leaf size-s leaf-d" alt="" draggable={false} />
+            <img src={getLeafSrc(5)} className="nature-floating-leaf size-m leaf-e" alt="" draggable={false} />
+            <img src={getLeafSrc(6)} className="nature-floating-leaf size-s leaf-f" alt="" draggable={false} />
+            <img src={getLeafSrc(7)} className="nature-floating-leaf size-l leaf-g" alt="" draggable={false} />
+            <img src={getLeafSrc(8)} className="nature-floating-leaf size-m leaf-h" alt="" draggable={false} />
+            <img src={getLeafSrc(9)} className="nature-floating-leaf size-s leaf-i" alt="" draggable={false} />
+            <img src={getLeafSrc(10)} className="nature-floating-leaf size-m leaf-j" alt="" draggable={false} />
+            <img src={getLeafSrc(11)} className="nature-floating-leaf size-l leaf-k" alt="" draggable={false} />
+            <img src={getLeafSrc(12)} className="nature-floating-leaf size-s leaf-l" alt="" draggable={false} />
+            <img src={getLeafSrc(13)} className="nature-floating-leaf size-m leaf-m" alt="" draggable={false} />
+            <img src={getLeafSrc(14)} className="nature-floating-leaf size-s leaf-n" alt="" draggable={false} />
+            <img src={getLeafSrc(15)} className="nature-floating-leaf size-s leaf-o" alt="" draggable={false} />
+            <img src={getLeafSrc(16)} className="nature-floating-leaf size-s leaf-p" alt="" draggable={false} />
+            <img src={getLeafSrc(17)} className="nature-floating-leaf size-s leaf-q" alt="" draggable={false} />
+            <img src={getLeafSrc(18)} className="nature-floating-leaf size-s leaf-r" alt="" draggable={false} />
 
-        <div className="now-playing">
-          <div className="track-info">
-            <div className="now-playing-label">now playing...</div>
-            <MarqueeText className="track-title" text={currentTrack.title} />
-            <div className="track-artist">by {currentTrack.channelTitle}</div>
+            {/* Special Spawn of Extra Leaves */}
+            {extraLeaves && (
+              <>
+                <img src={getLeafSrc(19)} className="nature-floating-leaf size-s leaf-extra-a" alt="" draggable={false} />
+                <img src={getLeafSrc(20)} className="nature-floating-leaf size-m leaf-extra-b" alt="" draggable={false} />
+                <img src={getLeafSrc(21)} className="nature-floating-leaf size-l leaf-extra-c" alt="" draggable={false} />
+                <img src={getLeafSrc(22)} className="nature-floating-leaf size-s leaf-extra-d" alt="" draggable={false} />
+                <img src={getLeafSrc(23)} className="nature-floating-leaf size-m leaf-extra-e" alt="" draggable={false} />
+                <img src={getLeafSrc(24)} className="nature-floating-leaf size-l leaf-extra-f" alt="" draggable={false} />
+              </>
+            )}
+          </div>
+
+          <NatureHeader
+            showPlaylistSongs={showPlaylistSongs}
+            onTogglePlaylist={() => {
+              setShowPlaylistSongs((v) => !v);
+              setShowSettings(false);
+            }}
+            showSettings={showSettings}
+            onToggleSettings={() => {
+              setShowSettings((v) => !v);
+              setShowPlaylistSongs(false);
+            }}
+            isPinned={isPinned}
+            onTogglePin={handleTogglePin}
+            onMinimize={minimizeWindow}
+            onClose={closeWindow}
+            onLogoClick={handleLogoClick}
+            fireflyActive={fireflyActive}
+            onToggleFirefly={() => setFireflyActive((prev) => !prev)}
+          />
+
+          <CircularAlbumArt thumbnailUrl={currentTrack?.thumbnailUrl} />
+
+          <TrackInfo
+            title={currentTrack?.title}
+            artist={currentTrack?.channelTitle}
+          />
+
+          <ProgressSection
+            currentTime={currentTime}
+            duration={duration}
+            seek={seek}
+          />
+
+          <div className="nature-controls-group">
+            <PlaybackControls
+              isPlaying={isPlaying}
+              playMode={playMode}
+              onTogglePlay={togglePlay}
+              onNext={() => next(true)}
+              onPrev={prev}
+              toggleShuffle={toggleShuffle}
+              cycleRepeatMode={cycleRepeatMode}
+            />
+
+            <VolumeControl
+              volume={volume}
+              muted={muted}
+              onToggleMute={toggleMute}
+              onChangeVolume={setVolume}
+            />
           </div>
         </div>
 
-        <div className="time-display">
-          <span className="time-current">{formatDuration(currentTime)}</span>
-          <span className="time-remaining">
-            {formatDuration(duration - currentTime)}
-          </span>
-        </div>
-
-        <div className="drag-region" data-tauri-drag-region />
-
+        {/* Custom drag region and resize handles */}
         <div className="resize-handle top-left" onMouseDown={resizeTL} />
         <div className="resize-handle top-right" onMouseDown={resizeTR} />
         <div className="resize-handle bottom-left" onMouseDown={resizeBL} />
         <div className="resize-handle bottom-right" onMouseDown={resizeBR} />
 
-        <div
-          className="progress-seek"
-          ref={seekRef}
-          onMouseEnter={() => setStarHovered(true)}
-          onMouseLeave={() => {
-            if (!dragging) setStarHovered(false);
-          }}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setDragging(true);
-            const rect = e.currentTarget.getBoundingClientRect();
-            const pct = Math.max(
-              0,
-              Math.min(1, (e.clientX - rect.left) / rect.width),
-            );
-            setHoverProgress(pct);
-            seek(pct);
-          }}
-        />
-
-        <div className="btn btn-prev" onClick={prev} />
-        <div className="btn btn-play" onClick={togglePlay} />
-        <div className="btn btn-next" onClick={() => next(true)} />
-
-        {(volumeHovered || volumeDragging) && (
-          <>
-            <img
-              src={assets.volumeBarLow}
-              className="layer layer-ui volume-bar-layer"
-              alt=""
-              draggable={false}
-            />
-            <img
-              src={assets.volumeBarHigh}
-              className="layer layer-ui volume-bar-layer"
-              alt=""
-              draggable={false}
-              style={{
-                clipPath: `inset(${(((1 - (muted ? 0 : volume)) * (420 - 338)) / 512 + 338 / 512) * 100}% 0 0 0)`,
-              }}
-            />
-          </>
-        )}
-
-        <div
-          className={`volume-hover-zone ${volumeHovered || volumeDragging ? "expanded" : ""}`}
-          onMouseLeave={() => {
-            if (!volumeDragging) setVolumeHovered(false);
-          }}
-        >
-          <div
-            className="btn-volume-icon"
-            onClick={toggleMute}
-            onMouseEnter={() => setVolumeHovered(true)}
-          />
-          {(volumeHovered || volumeDragging) && (
-            <div
-              className="volume-bar-area"
-              ref={volumeBarRef}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setVolumeDragging(true);
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pct = Math.max(
-                  0,
-                  Math.min(1, 1 - (e.clientY - rect.top) / rect.height),
-                );
-                setVolume(pct);
-              }}
-            />
-          )}
-        </div>
-
-        <div
-          className="btn btn-playmode"
-          onClick={cyclePlayMode}
-          title={playMode}
-        >
-          {playMode === "repeat-one" && (
-            <span className="repeat-one-badge">1</span>
-          )}
-        </div>
-
-        <div className="btn btn-minimize" onClick={minimizeWindow} />
-        <div className="btn btn-window" style={{ display: "none" }} />
-        <div className="btn btn-exit" onClick={closeWindow} />
-
-        <button
-          className="btn-playlist-toggle"
-          onClick={() => {
-            setShowPlaylistSongs((v) => !v);
-            setShowSettings(false);
-          }}
-        >
-          ♫ songs
-        </button>
-
-        <div
-          className="btn btn-settings"
-          onClick={() => {
-            setShowSettings((v) => !v);
-            setShowPlaylistSongs(false);
-          }}
-        />
-
-        <div
-          className={`btn btn-pin ${isPinned ? "active" : ""}`}
-          onClick={handleTogglePin}
-          title={isPinned ? "Always on Top: ON" : "Always on Top: OFF"}
-        >
-          <PinIcon />
-        </div>
-
+        {/* Playlist Panel */}
         {showPlaylistSongs && (
           <div className="playlist-panel">
             <div className="playlist-panel-inner">
@@ -1275,40 +1609,45 @@ export default function App() {
           </div>
         )}
 
+        {/* Settings Panel */}
         {showSettings && (
           <div className="settings-panel">
-            <div className="settings-panel-inner" style={{ padding: "20px" }}>
-              <div className="settings-label">theme</div>
+            <div className="settings-panel-inner">
+              {/* Season Settings */}
+              <div className="settings-label">season</div>
               <div className="settings-theme-row">
-                <button
-                  className={`settings-theme-btn ${theme === "pink" ? "active" : ""}`}
-                  onClick={() => selectTheme("pink")}
-                >
-                  pink
-                </button>
-                <button
-                  className={`settings-theme-btn ${theme === "blue" ? "active" : ""}`}
-                  onClick={() => selectTheme("blue")}
-                >
-                  blue
-                </button>
-                <button
-                  className={`settings-theme-btn ${theme === "vintage" ? "active" : ""}`}
-                  onClick={() => selectTheme("vintage")}
-                >
-                  vintage
-                </button>
-                <button
-                  className={`settings-theme-btn ${theme === "nature" ? "active" : ""}`}
-                  onClick={() => selectTheme("nature")}
-                >
-                  nature
-                </button>
+                {["spring", "summer", "autumn", "winter"].map((s) => (
+                  <button
+                    key={s}
+                    className={`settings-theme-btn ${season === s ? "active" : ""}`}
+                    onClick={() => {
+                      setSeason(s);
+                      localStorage.setItem("monis_garden_season", s);
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
 
-              <div className="settings-label" style={{ marginTop: "15px" }}>
-                mode
+              {/* Animation Settings */}
+              <div className="settings-label">animations</div>
+              <div className="settings-theme-row">
+                {["low", "normal", "high"].map((intensity) => (
+                  <button
+                    key={intensity}
+                    className={`settings-theme-btn ${animationIntensity === intensity ? "active" : ""}`}
+                    onClick={() => {
+                      setAnimationIntensity(intensity);
+                      localStorage.setItem("monis_garden_animation_intensity", intensity);
+                    }}
+                  >
+                    {intensity}
+                  </button>
+                ))}
               </div>
+
+              <div className="settings-label">mode</div>
               <div className="settings-theme-row">
                 <button
                   className={`settings-theme-btn ${currentMode === "local" ? "active" : ""}`}
@@ -1326,24 +1665,12 @@ export default function App() {
 
               {currentMode === "youtube" ? (
                 <>
-                  <div className="settings-label" style={{ marginTop: "15px" }}>
-                    youtube link
-                  </div>
+                  <div className="settings-label">youtube link</div>
                   <input
                     type="text"
                     placeholder="Paste Video or Playlist URL"
                     value={youtubeUrl}
                     onChange={(e) => setYoutubeUrl(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "8px",
-                      background: "rgba(0,0,0,0.2)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      color: "white",
-                      borderRadius: "4px",
-                      fontFamily: "inherit",
-                      marginBottom: "10px",
-                    }}
                   />
                   <button
                     className="settings-theme-btn"
@@ -1356,9 +1683,7 @@ export default function App() {
 
                   {savedPlaylistId && (
                     <>
-                      <div className="settings-label" style={{ marginTop: "15px" }}>
-                        saved playlist
-                      </div>
+                      <div className="settings-label">saved playlist</div>
                       <div className="saved-playlist-box">
                         <div className="saved-playlist-title">
                           {savedPlaylistTitle || "YouTube Playlist"}
@@ -1395,9 +1720,7 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <div className="settings-label" style={{ marginTop: "15px" }}>
-                    local file
-                  </div>
+                  <div className="settings-label">local file</div>
                   <button
                     className="settings-theme-btn"
                     onClick={handleSelectLocalAudio}
@@ -1408,7 +1731,7 @@ export default function App() {
                   {localAudioPath && (
                     <div
                       style={{
-                        color: "white",
+                        color: "var(--nature-dark)",
                         fontSize: "10px",
                         textAlign: "center",
                         wordBreak: "break-all",
@@ -1425,7 +1748,7 @@ export default function App() {
               {playlistStatusMessage && (
                 <div
                   style={{
-                    color: "#4effa6",
+                    color: "var(--nature-accent)",
                     fontSize: "11px",
                     marginTop: "10px",
                     textAlign: "center",
@@ -1453,6 +1776,99 @@ export default function App() {
               )}
             </div>
           </div>
+        )}
+
+        {/* Modals and Overlays */}
+
+        {/* Feature 2: Birthday Screen Overlay */}
+        {showBirthday && createPortal(
+          <div
+            className={`nature-birthday-overlay ${birthdayFadeOut ? "fade-out" : ""}`}
+            onClick={closeBirthdayOverlay}
+          >
+            <div className="nature-birthday-content" onClick={(e) => e.stopPropagation()}>
+              <div className="nature-birthday-title">Happy Birthday Moni 🌿</div>
+              <div className="nature-birthday-body">
+                {"May every song bring\na beautiful memory."}
+              </div>
+              <div className="nature-birthday-footer" onClick={closeBirthdayOverlay}>
+                Click anywhere to enter the garden
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Feature 3: Secret Moni Message Modal */}
+        {showSecretModal && createPortal(
+          <div className={`nature-modal-backdrop ${secretFadeOut ? "fade-out" : ""}`} onClick={closeSecretModal}>
+            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="nature-modal-title">🌿 Hi Moni</div>
+              <div className="nature-modal-body">
+                {"I hope this player\nalways finds you\na good song."}
+              </div>
+              <button
+                className="nature-modal-button"
+                onClick={closeSecretModal}
+              >
+                Continue
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Feature 5: Forest Friend Achievement Modal */}
+        {showAchievement && createPortal(
+          <div className={`nature-modal-backdrop ${achievementFadeOut ? "fade-out" : ""}`} onClick={closeAchievementModal}>
+            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="nature-modal-title">🌿 Forest Friend Unlocked</div>
+              <div className="nature-modal-body">
+                {`Thanks for spending time\nin Moni's Garden.\n\nCompleted: ${completedCount} songs`}
+              </div>
+              <button
+                className="nature-modal-button"
+                onClick={closeAchievementModal}
+              >
+                Continue
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Feature 6: About Modal */}
+        {showAboutModal && createPortal(
+          <div className={`nature-modal-backdrop ${aboutFadeOut ? "fade-out" : ""}`} onClick={closeAboutModal}>
+            <div className="nature-modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="nature-modal-title">Moni's Garden</div>
+              <div className="nature-modal-body">
+                {"Version 1.0\n\nCreated for Moni 🌿\n\nThank you for inspiring\nthis little forest."}
+              </div>
+              <button
+                className="nature-modal-button"
+                onClick={closeAboutModal}
+              >
+                Return
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* Portal for About button inside Settings Panel */}
+        {settingsPanelContainer && createPortal(
+          <button
+            className="settings-theme-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowAboutModal(true);
+            }}
+            style={{ width: "100%", marginTop: "15px" }}
+          >
+            About This Player
+          </button>,
+          settingsPanelContainer
         )}
       </div>
     </ErrorBoundary>
